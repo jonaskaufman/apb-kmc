@@ -5,6 +5,9 @@
 #include <utility>
 #include <vector>
 
+/// Positive modulo
+inline int modulo(int a, int b) { return ((a % b) + b) % b; }
+
 /// Periodic grid of simulation cells with phase 0 or 1
 class SimulationCellGrid
 {
@@ -23,10 +26,11 @@ public:
     void flip_cell_phase(const int& x, const int& y);
 
     /// Get pixel representation of grid
-    //  If stagger is false, pixel grid is a normal grid of square cells 
+    //  If stagger is false, pixel grid is a normal grid of square cells
     //  If stagger is true, cells are doubled along the x direction and staggered along y
-//    const std::vector<std::vector<int>>& get_pixel_grid() const; // reference?
+    std::vector<std::vector<int>> get_pixel_grid() const;
 
+    // do this later
     /// Print pixel grid to stream
     void print_pixel_grid(std::ostream& stream) const;
 

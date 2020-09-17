@@ -2,11 +2,11 @@
 #include "parameters.hpp"
 #include <iostream>
 #include <numeric>
+#include <random>
 
 SimulationCellGrid::SimulationCellGrid(const int& width, const std::vector<int>& spacings, bool stagger)
-    : width{width}, stagger{stagger}
+    : width{width}, height{std::accumulate(spacings.begin(), spacings.end(), 0)}, stagger{stagger}
 {
-    height = std::accumulate(spacings.begin(), spacings.end(), 0);
     phase_grid = std::vector<std::vector<int>>(width, std::vector<int>(height));
     int y = 0;
     bool flipped = false;
@@ -79,3 +79,46 @@ void SimulationCellGrid::set_cell_phase(const int& x, const int& y, const int& p
     phase_grid[modulo(x, width)][modulo(y, height)] = phase;
 }
 
+Simulation::Simulation(const BOUNDARY_TYPE& boundary_type,
+                       const SimulationCellGrid& initial_grid,
+                       const int& temperature)
+    : boundary_type{boundary_type}, grid{initial_grid}, time{0}, temperature{temperature}
+{ 
+    populate_event_list(); 
+    event_index_distribution = std::uniform_int_distribution<int>(0, event_list.size()-1);
+    uniform_unit_interval_distribution = std::uniform_real_distribution<double>(0.0, 1.0);
+    std::random_device device;
+    generator = std::mt19937_64(device());
+}
+
+
+void Simulation::step()
+{
+    // select random number in size of event list 
+    std::cout << event_index_distribution(generator) << std::endl;
+    // determine rate of event
+
+    // select number to determine acceptance
+    std::cout << uniform_unit_interval_distribution(generator) << std::endl;
+    // select number to update time
+    double time_step = 0;
+    time += time_step;
+}
+
+void Simulation::print_grid(std::ostream& stream) const { grid.print_pixel_grid(stream); }
+
+void Simulation::populate_event_list()
+{
+    event_list.clear();
+    for (int y = 0; y < grid.height; y++)
+    {
+        for (int x = 0; x < grid.width; x++)
+        {
+            event_list.push_back({std::make_pair(x, y)});
+            if (boundary_type == BOUNDARY_TYPE::PLUS)
+            {
+                event_list.push_back({std::make_pair(x, y), std::make_pair(modulo(x + 1, grid.width), y)});
+            }
+        }
+    }
+}

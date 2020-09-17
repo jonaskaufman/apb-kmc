@@ -4,6 +4,7 @@
 #include <iostream>
 #include <utility>
 #include <vector>
+#include <random>
 
 /// Positive modulo
 inline int modulo(int a, int b) { return ((a % b) + b) % b; }
@@ -18,6 +19,10 @@ public:
     //  of heights given by spacings.
     //  Note that spacings must be of even length to ensure periodicity.
     SimulationCellGrid(const int& width, const std::vector<int>& spacings, bool stagger);
+    
+    /// Grid dimensions
+    const int width;
+    const int height;
 
     /// Get phase of cell located at x,y
     int get_cell_phase(const int& x, const int& y) const;
@@ -35,10 +40,6 @@ public:
     void print_pixel_grid(std::ostream& stream) const;
 
 private:
-    /// Grid dimensions
-    int width;
-    int height;
-
     /// Whether grid should be staggered in pixel representation
     bool stagger;
 
@@ -79,13 +80,22 @@ private:
     BOUNDARY_TYPE boundary_type;
 
     /// Simulation time, in units of reciprocal vibrational prefactor
-    int time;
+    double time;
 
     /// Simulation temperature, in kelvin
     int temperature;
 
     /// List of all possible events that could occur over the course of a simulation
     std::vector<Event> event_list;
+
+    /// 64-bit Mersenne Twister generator
+    std::mt19937_64 generator;
+
+    /// Uniform integer distribution over event list indices
+    std::uniform_int_distribution<int> event_index_distribution;
+
+    /// Uniform real distribution on unit interval 
+    std::uniform_real_distribution<double> uniform_unit_interval_distribution;
 
     /// Populate the event list based on grid dimensions and boundary type
     void populate_event_list();

@@ -2,12 +2,29 @@
 #define SIMULATION_H
 
 #include <iostream>
+#include <random>
 #include <utility>
 #include <vector>
-#include <random>
 
-/// Positive modulo
-inline int modulo(int a, int b) { return ((a % b) + b) % b; }
+class RandomGenerator
+{
+public:
+    /// Default constructor
+    RandomGenerator();
+
+    /// Get random integer between 0 and maximum_value (inclusive)
+    int sample_integer_range(const int& maximum_value);
+
+    /// Get a random real in the unit interval
+    double sample_unit_interval();
+
+private:
+    /// 64-bit Mersenne Twister generator
+    std::mt19937_64 generator;
+
+    /// Uniform real distribution on unit interval
+    std::uniform_real_distribution<double> uniform_unit_interval_distribution;
+};
 
 /// Periodic grid of simulation cells with phase 0 or 1
 class SimulationCellGrid
@@ -19,7 +36,7 @@ public:
     //  of heights given by spacings.
     //  Note that spacings must be of even length to ensure periodicity.
     SimulationCellGrid(const int& width, const std::vector<int>& spacings, bool stagger);
-    
+
     /// Grid dimensions
     const int width;
     const int height;
@@ -73,6 +90,9 @@ public:
     /// Print pixel grid to stream
     void print_grid(std::ostream& stream) const;
 
+    /// Get simulation time
+    double get_time() { return time; }
+
 private:
     SimulationCellGrid grid;
 
@@ -88,23 +108,17 @@ private:
     /// List of all possible events that could occur over the course of a simulation
     std::vector<Event> event_list;
 
-    /// 64-bit Mersenne Twister generator
-    std::mt19937_64 generator;
-
-    /// Uniform integer distribution over event list indices
-    std::uniform_int_distribution<int> event_index_distribution;
-
-    /// Uniform real distribution on unit interval 
-    std::uniform_real_distribution<double> uniform_unit_interval_distribution;
+    /// Random number generator
+    RandomGenerator random_generator;
 
     /// Populate the event list based on grid dimensions and boundary type
     void populate_event_list();
 
     /// Calculate the rate of an event given the current configuration
-    double calculate_rate(const Event&);
+    double calculate_rate(const Event& event) const;
 
     /// Calculate the repulsion energy change due to an event
-    double calculate_repulsion_energy_change(const Event&);
+    double calculate_repulsion_energy_change(const Event& event) const;
 };
 
 #endif

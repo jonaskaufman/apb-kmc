@@ -103,6 +103,7 @@ Simulation::Simulation(const BOUNDARY_TYPE& boundary_type,
                        const int& temperature)
     : boundary_type{boundary_type}, grid{initial_grid}, time{0}, temperature{temperature}
 {
+    // TODO check stagger compatible with boundary type
     populate_event_list();
 }
 
@@ -117,8 +118,7 @@ void Simulation::step()
             grid.flip_cell_phase(indices.first, indices.second);
         }
     }
-    double time_step =
-        std::log(1.0 / random_generator.sample_unit_interval()) / event_list.size(); // TODO check for int division here
+    double time_step = std::log(1.0 / random_generator.sample_unit_interval()) / event_list.size();
     time += time_step;
 }
 
@@ -149,15 +149,79 @@ double Simulation::calculate_rate(const Event& event) const
         int x = event[0].first;
         int y = event[0].second;
         int phase = grid.get_cell_phase(x, y);
-        int above_phase_0 = grid.get_cell_phase(x, y + 1);
-        int above_phase_1 = grid.get_cell_phase(x + 1 - 2 * (y % 2), y + 1);
-        int below_phase_0 = grid.get_cell_phase(x, y - 1);
-        int below_phase_1 = grid.get_cell_phase(x + 1 - 2 * (y % 2), y - 1);
-        if (((above_phase_0 == above_phase_1) && (below_phase_0 == below_phase_1)) &&
-            ((phase != above_phase_0) ^ (phase != below_phase_0)))
+
+        // Above/below neighbors are at x, x+1 if y is even and x-1, x if y is odd
+        int x_left = x - 1 * (y % 2);
+        int x_right = x + 1 * ((y + 1) % 2);
+        int up_left_phase = grid.get_cell_phase(x_left, y + 1);
+        int up_right_phase = grid.get_cell_phase(x_right, y + 1);
+        int down_left_phase = grid.get_cell_phase(x_left, y - 1);
+        int down_right_phase = grid.get_cell_phase(x_right, y - 1);
+        bool flat_check = (up_left_phase == up_right_phase) && (down_left_phase == down_right_phase);
+        bool boundary_check = (phase != up_left_phase) ^ (phase != down_left_phase);
+        if (flat_check && boundary_check)
         {
-            rate = boltzmann_factor(ZETA_MINUS_BARRIER, temperature);
+            double barrier = ZETA_MINUS_BARRIER + 0.5 * calculate_repulsion_energy_change(
+                                                            event); // TODO calculate barrier in separate function?
+            rate = boltzmann_factor(barrier, temperature);
         }
     }
     return rate;
+}
+
+double Simulation::calculate_repulsion_energy_change(const Event& event) const
+{
+    double energy_change = 0;
+    if (boundary_type == BOUNDARY_TYPE::MINUS)
+    {
+
+        int x = event[0].first;
+        int y = event[0].second;
+        int phase = grid.get_cell_phase(x, y);
+        bool boundary_below = phase != grid.get_cell_phase(x, y - 1);
+        // TODO assert site is at boundary
+
+        bool found_boundary_same = false;
+        bool found_boundary_opposite = false;
+        int d_same = 100;
+        int d_opposite = 100;
+
+        int max_dy = 5;
+        for (int i = 0; i < 2; i++)
+        {
+            for (int dy = 1; dy <= max_dy; dy++)
+            {
+                int x_look = (i == 0 ? (x - 1 * (y % 2) * (dy % 2)) : (x + 1 * ((y + 1) % 2) * (dy % 2)));
+
+                if (found_boundary_same && found_boundary_opposite)
+                {
+                    break;
+                }
+                if (!found_boundary_same)
+                {
+                    if ((boundary_below && (phase != grid.get_cell_phase(x_look, y + dy))) ||
+                        (!boundary_below && (phase != grid.get_cell_phase(x_look, y - dy))))
+                    {
+                        found_boundary_same = true;
+                        d_same = dy;
+                    }
+                }
+                if (!found_boundary_opposite)
+                {
+                    if ((boundary_below && (phase == grid.get_cell_phase(x_look, y - dy))) ||
+                        (!boundary_below && (phase == grid.get_cell_phase(x_look, y + dy))))
+                    {
+                        found_boundary_opposite = true;
+                        d_opposite = dy - 1;
+                    }
+                }
+            }
+            double current_energy = 0.5 * (zeta_minus_boundary_energy(d_same) + zeta_minus_boundary_energy(d_opposite));
+            double new_energy =
+                0.5 * (zeta_minus_boundary_energy(d_same - 1) + zeta_minus_boundary_energy(d_opposite + 1));
+            energy_change += new_energy - current_energy;
+//            std::cout << d_same << ", " << d_opposite << ", " << new_energy - current_energy << std::endl;
+        }
+    }
+    return energy_change;
 }

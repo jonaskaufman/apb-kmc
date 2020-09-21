@@ -118,7 +118,11 @@ private:
     double calculate_rate(const Event& event) const;
 
     /// Calculate the repulsion energy change due to an event
-    double calculate_repulsion_energy_change(const Event& event) const;
+    double calculate_total_repulsion_energy_change(const Event& event) const;
+   
+    /// 
+    double calculate_repulsion_energy_change(const int& x, const int& y) const;
 };
+
 
 #endif

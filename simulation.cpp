@@ -140,6 +140,7 @@ void Simulation::populate_event_list()
     }
 }
 
+// TODO break up into: Check valid, calculate barrier functions?
 double Simulation::calculate_rate(const Event& event) const
 {
     double rate = 0;
@@ -161,7 +162,7 @@ double Simulation::calculate_rate(const Event& event) const
         bool boundary_check = (phase != up_left_phase) ^ (phase != down_left_phase);
         if (flat_check && boundary_check)
         {
-            double barrier = ZETA_MINUS_BARRIER + 0.5 * calculate_repulsion_energy_change(
+            double barrier = ZETA_MINUS_BARRIER + 0.5 * calculate_total_repulsion_energy_change(
                                                             event); // TODO calculate barrier in separate function?
             rate = boltzmann_factor(barrier, temperature);
         }
@@ -169,59 +170,69 @@ double Simulation::calculate_rate(const Event& event) const
     return rate;
 }
 
-double Simulation::calculate_repulsion_energy_change(const Event& event) const
+// TODO break up into smaller functions
+double Simulation::calculate_total_repulsion_energy_change(const Event& event) const
 {
     double energy_change = 0;
-    if (boundary_type == BOUNDARY_TYPE::MINUS)
+    for (auto& indices : event)
     {
-
-        int x = event[0].first;
-        int y = event[0].second;
-        int phase = grid.get_cell_phase(x, y);
-        bool boundary_below = phase != grid.get_cell_phase(x, y - 1);
-        // TODO assert site is at boundary
-
-        bool found_boundary_same = false;
-        bool found_boundary_opposite = false;
-        int d_same = 100;
-        int d_opposite = 100;
-
-        int max_dy = 5;
-        for (int i = 0; i < 2; i++)
+        if (boundary_type == BOUNDARY_TYPE::MINUS)
         {
-            for (int dy = 1; dy <= max_dy; dy++)
-            {
-                int x_look = (i == 0 ? (x - 1 * (y % 2) * (dy % 2)) : (x + 1 * ((y + 1) % 2) * (dy % 2)));
+            int x = indices.first;
+            int y = indices.second;
+            energy_change += calculate_repulsion_energy_change(x, y);
+        }
+    }
+    return energy_change;
+}
 
-                if (found_boundary_same && found_boundary_opposite)
+double Simulation::calculate_repulsion_energy_change(const int& x, const int& y) const
+{
+    double energy_change;
+    int phase = grid.get_cell_phase(x, y);
+    bool boundary_below = phase != grid.get_cell_phase(x, y - 1);
+    // TODO assert site is at boundary
+
+    bool found_boundary_same = false;
+    bool found_boundary_opposite = false;
+    int d_same = 100;
+    int d_opposite = 100;
+
+    int max_dy = 5;
+    for (int i = 0; i < 2; i++)
+    {
+        for (int dy = 1; dy <= max_dy; dy++)
+        {
+            int x_look = (i == 0 ? (x - 1 * (y % 2) * (dy % 2)) : (x + 1 * ((y + 1) % 2) * (dy % 2)));
+
+            if (found_boundary_same && found_boundary_opposite)
+            {
+                break;
+            }
+            if (!found_boundary_same)
+            {
+                if ((boundary_below && (phase != grid.get_cell_phase(x_look, y + dy))) ||
+                    (!boundary_below && (phase != grid.get_cell_phase(x_look, y - dy))))
                 {
-                    break;
-                }
-                if (!found_boundary_same)
-                {
-                    if ((boundary_below && (phase != grid.get_cell_phase(x_look, y + dy))) ||
-                        (!boundary_below && (phase != grid.get_cell_phase(x_look, y - dy))))
-                    {
-                        found_boundary_same = true;
-                        d_same = dy;
-                    }
-                }
-                if (!found_boundary_opposite)
-                {
-                    if ((boundary_below && (phase == grid.get_cell_phase(x_look, y - dy))) ||
-                        (!boundary_below && (phase == grid.get_cell_phase(x_look, y + dy))))
-                    {
-                        found_boundary_opposite = true;
-                        d_opposite = dy - 1;
-                    }
+                    found_boundary_same = true;
+                    d_same = dy;
                 }
             }
-            double current_energy = 0.5 * (zeta_minus_boundary_energy(d_same) + zeta_minus_boundary_energy(d_opposite));
-            double new_energy =
-                0.5 * (zeta_minus_boundary_energy(d_same - 1) + zeta_minus_boundary_energy(d_opposite + 1));
-            energy_change += new_energy - current_energy;
-//            std::cout << d_same << ", " << d_opposite << ", " << new_energy - current_energy << std::endl;
+            if (!found_boundary_opposite)
+            {
+                if ((boundary_below && (phase == grid.get_cell_phase(x_look, y - dy))) ||
+                    (!boundary_below && (phase == grid.get_cell_phase(x_look, y + dy))))
+                {
+                    found_boundary_opposite = true;
+                    d_opposite = dy - 1;
+                }
+            }
         }
+        double current_energy = 0.5 * (zeta_minus_boundary_energy(d_same) + zeta_minus_boundary_energy(d_opposite));
+        double new_energy = 0.5 * (zeta_minus_boundary_energy(d_same - 1) + zeta_minus_boundary_energy(d_opposite + 1));
+        energy_change += new_energy - current_energy;
+        //            std::cout << d_same << ", " << d_opposite << ", " << new_energy - current_energy <<
+        //            std::endl;
     }
     return energy_change;
 }

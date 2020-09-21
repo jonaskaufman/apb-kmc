@@ -10,8 +10,8 @@ int main()
     SimulationCellGrid grid(width, spacings, true);
     // grid.print_pixel_grid(std::cout);
 
-    int steps = 1000000;
-    int print_interval = 1000;
+    int steps = 10000000;
+    int print_interval = 1000000;
     int temperature = 300;
 
     Simulation simulation(BOUNDARY_TYPE::MINUS, grid, temperature);

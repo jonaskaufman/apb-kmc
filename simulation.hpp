@@ -47,10 +47,15 @@ public:
     /// Flip phase of cell located at x,y
     void flip_cell_phase(const int& x, const int& y);
 
+    /// TODO change to get_phase_pixel_grid
     /// Get pixel representation of grid
     //  If stagger is false, pixel grid is a normal grid of square cells
     //  If stagger is true, cells are doubled along the x direction and staggered along y
     std::vector<std::vector<int>> get_pixel_grid() const;
+
+    std::vector<std::vector<int>> get_spacings_pixel_grid() const;
+
+    std::vector<int> get_spacings_horizontal_pixel_averages() const;
 
     // do this later
     /// Print pixel grid to stream

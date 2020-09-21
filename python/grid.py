@@ -41,3 +41,32 @@ class PixelGrid:
 
 def gaussian(mu, sigma, x):
     return np.exp(-((x-mu)**2)/(2*(sigma**2)))/(sigma*np.sqrt(2*np.pi))
+
+
+def get_spacing_pixel_grid(phase_grid):
+    spacing_grid = PixelGrid(phase_grid.width, phase_grid.height)
+    for y in range(phase_grid.height):
+        for x in range(phase_grid.width):
+            phase = phase_grid.get_value(x, y)
+            for dy_up in range(phase_grid.height):
+                if phase != phase_grid.get_value(x, y+dy_up):
+                    break
+            for dy_down in range(phase_grid.height):
+                if phase != phase_grid.get_value(x, y-dy_down):
+                    break
+            k = dy_up+dy_down-1
+            spacing_grid.set_value(x, y, k)
+    return spacing_grid
+
+
+def get_composition_pixel_grid(spacing_grid, boundary_type):
+    composition_grid = PixelGrid(spacing_grid.width, spacing_grid.height)
+    for y in range(spacing_grid.height):
+        for x in range(spacing_grid.width):
+            k = spacing_grid.get_value(x, y)
+            if boundary_type == '-':
+                composition = k/(2*k+1)
+            elif boundary_type == '+':
+                composition = k/(2*k-1)
+            composition_grid.set_value(x, y, composition)
+    return composition_grid

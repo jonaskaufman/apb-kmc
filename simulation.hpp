@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 
+/// Random number generator
 class RandomGenerator
 {
 public:
@@ -26,7 +27,9 @@ private:
     std::uniform_real_distribution<double> uniform_unit_interval_distribution;
 };
 
+// TODO: Store phase as bool instead of int?
 /// Periodic grid of simulation cells with phase 0 or 1
+/// Can be staggered rectangular grid (like bricks) or square grid
 class SimulationCellGrid
 {
 public:
@@ -34,7 +37,7 @@ public:
 
     /// Construct grid of a given width with regions of alternating phase
     //  of heights given by spacings.
-    //  Note that spacings must be of even length to ensure periodicity.
+    //  An even number of spacings must be given to ensure periodicity
     SimulationCellGrid(const int& width, const std::vector<int>& spacings, bool stagger);
 
     /// Grid dimensions
@@ -44,22 +47,18 @@ public:
     /// Get phase of cell located at x,y
     int get_cell_phase(const int& x, const int& y) const;
 
-    /// Flip phase of cell located at x,y
+    /// Flip phase of cell located at x,y from 0 to 1, or vice versa
     void flip_cell_phase(const int& x, const int& y);
 
-    /// TODO change to get_phase_pixel_grid
-    /// Get pixel representation of grid
+    // TODO: Use typdef or struct for pixel grids?
+    /// Get pixel representation of phase grid
     //  If stagger is false, pixel grid is a normal grid of square cells
     //  If stagger is true, cells are doubled along the x direction and staggered along y
-    std::vector<std::vector<int>> get_pixel_grid() const;
+    std::vector<std::vector<int>> get_phase_pixel_grid() const;
 
+    /// Get pixel representation of grid where the value of each pixel
+    //  is equal to the combined vertical distance to the nearest two boundaries
     std::vector<std::vector<int>> get_spacings_pixel_grid() const;
-
-    std::vector<int> get_spacings_horizontal_pixel_averages() const;
-
-    // do this later
-    /// Print pixel grid to stream
-    void print_pixel_grid(std::ostream& stream) const;
 
 private:
     /// Whether grid should be staggered in pixel representation
@@ -72,7 +71,14 @@ private:
     void set_cell_phase(const int& x, const int& y, const int& phase);
 };
 
-/// Kinetic events are vectors of indices representing sites to flip
+// TODO: Come up with a better name
+/// Average pixel values across each row to obtain a vertical profile
+std::vector<double> get_horizontal_pixel_averages(const std::vector<std::vector<int>>& pixel_grid);
+
+/// Print pixel grid to output stream
+void print_pixel_grid(const std::vector<std::vector<int>>& pixel_grid, std::ostream& stream);
+
+// Kinetic events are vectors of indices representing grid cells to flip
 using Event = std::vector<std::pair<int, int>>;
 
 /// Possible boundary types for simulation (zeta minus or zeta plus)
@@ -82,23 +88,30 @@ enum class BOUNDARY_TYPE
     PLUS
 };
 
-/// Monte Carlo simulation
+/// Kinetic Monte Carlo simulation
 class Simulation
 {
 public:
     Simulation() = delete;
     Simulation(const BOUNDARY_TYPE& boundary_type, const SimulationCellGrid& initial_grid, const int& temperature);
 
-    /// Attempt one event, update configuration and time appropriately
+    /// Attempt one event, update time, update configuration (if accepted)
     void step();
 
-    /// Print pixel grid to stream
-    void print_grid(std::ostream& stream) const;
+    /// Print phase pixel grid to stream
+    void print_phase_pixel_grid(std::ostream& stream) const;
+
+    /// Print spacings pixel grid to stream
+    void print_spacings_pixel_grid(std::ostream& stream) const;
+
+    /// 
+    void print_horizontal_pixel_average_spacings(std::ostream& stream) const;
 
     /// Get simulation time
-    double get_time() { return time; }
+    double get_time() const { return time; }
 
 private:
+    /// Cell grid storing phase values
     SimulationCellGrid grid;
 
     /// Type of boundaries being simulated
@@ -113,7 +126,7 @@ private:
     /// List of all possible events that could occur over the course of a simulation
     std::vector<Event> event_list;
 
-    /// Random number generator
+    /// Random number generator to be used throughout simulation
     RandomGenerator random_generator;
 
     /// Populate the event list based on grid dimensions and boundary type
@@ -124,10 +137,9 @@ private:
 
     /// Calculate the repulsion energy change due to an event
     double calculate_total_repulsion_energy_change(const Event& event) const;
-   
-    /// 
+
+    /// Calculate the repulsion energy change due to a single site flip
     double calculate_repulsion_energy_change(const int& x, const int& y) const;
 };
-
 
 #endif

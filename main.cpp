@@ -20,7 +20,9 @@ int main()
         if (n % print_interval == 0)
         {
             std::cout << simulation.get_time() << std::endl;
-            simulation.print_grid(std::cout);
+//            simulation.print_phase_pixel_grid(std::cout);
+//            simulation.print_spacings_pixel_grid(std::cout);
+            simulation.print_horizontal_pixel_average_spacings(std::cout);
         }
         simulation.step();
     }

@@ -4,7 +4,7 @@
 #include <numeric>
 #include <random>
 
-/// Positive modulo
+/// Non-negative modulo
 inline int modulo(int a, int b) { return ((a % b) + b) % b; }
 
 /// Boltzmann factor
@@ -46,7 +46,7 @@ SimulationCellGrid::SimulationCellGrid(const int& width, const std::vector<int>&
     }
 }
 
-std::vector<std::vector<int>> SimulationCellGrid::get_pixel_grid() const
+std::vector<std::vector<int>> SimulationCellGrid::get_phase_pixel_grid() const
 {
     if (stagger)
     {
@@ -69,17 +69,41 @@ std::vector<std::vector<int>> SimulationCellGrid::get_pixel_grid() const
     }
 }
 
-void SimulationCellGrid::print_pixel_grid(std::ostream& stream) const
+std::vector<std::vector<int>> SimulationCellGrid::get_spacings_pixel_grid() const
 {
-    std::vector<std::vector<int>> pixel_grid = get_pixel_grid();
-    for (int y = 0; y < pixel_grid[0].size(); y++)
+    std::vector<std::vector<int>> phase_pixel_grid = get_phase_pixel_grid();
+    int pixel_grid_width = phase_pixel_grid.size();
+    int pixel_grid_height = phase_pixel_grid[0].size();
+    std::vector<std::vector<int>> spacings_pixel_grid(pixel_grid_width, std::vector<int>(height));
+    for (int y = 0; y < pixel_grid_height; y++)
     {
-        for (int x = 0; x < pixel_grid.size(); x++)
+        for (int x = 0; x < pixel_grid_width; x++)
         {
-            stream << pixel_grid[x][y] << " ";
+            int phase = phase_pixel_grid[x][y];
+            int k_up = -1;
+            for (int dy = 0; dy < pixel_grid_height; dy++)
+            {
+                if (phase != phase_pixel_grid[x][modulo(y + dy, pixel_grid_height)])
+                {
+                    k_up = dy;
+                    break;
+                }
+            }
+            int k_down = -1;
+            for (int dy = 0; dy < pixel_grid_height; dy++)
+            {
+                if (phase != phase_pixel_grid[x][modulo(y - dy, pixel_grid_height)])
+                {
+                    k_down = dy;
+                    break;
+                }
+            }
+
+            int k = k_up + k_down - 1;
+            spacings_pixel_grid[x][y] = k;
         }
-        stream << std::endl;
     }
+    return spacings_pixel_grid;
 }
 
 int SimulationCellGrid::get_cell_phase(const int& x, const int& y) const
@@ -107,6 +131,35 @@ Simulation::Simulation(const BOUNDARY_TYPE& boundary_type,
     populate_event_list();
 }
 
+std::vector<double> get_horizontal_pixel_averages(const std::vector<std::vector<int>>& pixel_grid)
+{
+    int pixel_grid_width = pixel_grid.size();
+    int pixel_grid_height = pixel_grid[0].size();
+    std::vector<double> averages(pixel_grid_height, 0);
+    for (int y = 0; y < pixel_grid_height; y++)
+    {
+        int sum = 0;
+        for (int x = 0; x < pixel_grid_width; x++)
+        {
+            sum += pixel_grid[x][y];
+        }
+        averages[y] = static_cast<double>(sum) / static_cast<double>(pixel_grid_width);
+    }
+    return averages;
+}
+
+void print_pixel_grid(const std::vector<std::vector<int>>& pixel_grid, std::ostream& stream)
+{
+    for (int y = 0; y < pixel_grid[0].size(); y++)
+    {
+        for (int x = 0; x < pixel_grid.size(); x++)
+        {
+            stream << pixel_grid[x][y] << " ";
+        }
+        stream << std::endl;
+    }
+}
+
 void Simulation::step()
 {
     Event candidate_event = event_list[random_generator.sample_integer_range(event_list.size() - 1)];
@@ -122,7 +175,25 @@ void Simulation::step()
     time += time_step;
 }
 
-void Simulation::print_grid(std::ostream& stream) const { grid.print_pixel_grid(stream); }
+void Simulation::print_phase_pixel_grid(std::ostream& stream) const
+{
+    print_pixel_grid(grid.get_phase_pixel_grid(), stream);
+}
+
+void Simulation::print_spacings_pixel_grid(std::ostream& stream) const
+{
+    print_pixel_grid(grid.get_spacings_pixel_grid(), stream);
+}
+
+void Simulation::print_horizontal_pixel_average_spacings(std::ostream& stream) const
+{
+    std::vector<double> averages = get_horizontal_pixel_averages(grid.get_spacings_pixel_grid());
+    for (auto& a : averages)
+    {
+        stream << a << " ";
+    }
+    stream << std::endl;
+}
 
 void Simulation::populate_event_list()
 {
@@ -162,8 +233,7 @@ double Simulation::calculate_rate(const Event& event) const
         bool boundary_check = (phase != up_left_phase) ^ (phase != down_left_phase);
         if (flat_check && boundary_check)
         {
-            double barrier = ZETA_MINUS_BARRIER + 0.5 * calculate_total_repulsion_energy_change(
-                                                            event); // TODO calculate barrier in separate function?
+            double barrier = ZETA_MINUS_BARRIER + 0.5 * calculate_total_repulsion_energy_change(event); // TODO calculate barrier in separate function?
             rate = boltzmann_factor(barrier, temperature);
         }
     }
@@ -186,9 +256,10 @@ double Simulation::calculate_total_repulsion_energy_change(const Event& event) c
     return energy_change;
 }
 
+// TODO: Change to nearest-neighbor boundary only
 double Simulation::calculate_repulsion_energy_change(const int& x, const int& y) const
 {
-    double energy_change;
+    double energy_change = 0;
     int phase = grid.get_cell_phase(x, y);
     bool boundary_below = phase != grid.get_cell_phase(x, y - 1);
     // TODO assert site is at boundary

@@ -14,12 +14,12 @@ double zeta_minus_boundary_energy(const int& spacing)
     {
     case 1:
         return 0.0543;
-    case 2:
-        return 0.01011;
-    case 3:
-        return 0.0042;
-    case 4:
-        return 0.00003999999996;
+//    case 2:
+//        return 0.01011;
+//    case 3:
+//        return 0.0042;
+//    case 4:
+//        return 0.00003999999996;
     default:
         return 0;
     }

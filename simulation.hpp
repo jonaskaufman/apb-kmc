@@ -105,7 +105,7 @@ public:
     void print_spacings_pixel_grid(std::ostream& stream) const;
 
     /// 
-    void print_horizontal_pixel_average_spacings(std::ostream& stream) const;
+    std::vector<double> get_horizontal_pixel_average_spacings() const;
 
     /// Get simulation time
     double get_time() const { return time; }

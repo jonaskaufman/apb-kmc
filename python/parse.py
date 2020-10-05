@@ -2,8 +2,28 @@ import sys
 import numpy as np
 from grid import *
 import matplotlib.pyplot as plt
+import scipy.optimize
 
+def parse_horizontal_results(file_name):
+    times = []
+    horizontal_values = [] 
+    with open(file_name, 'r') as f:
+        group = [] 
+        while True:
+            split_line = f.readline().split()
+            if len(split_line) > 1:
+                group.append(list(map(float, split_line)))
+            else:
+                if group:
+                    horizontal_values.append(group)
+                if len(split_line) == 1:
+                    times.append(float(split_line[0]))
+                    group = []
+                else:
+                    break
+    return times, horizontal_values
 
+# for grid values
 def parse_results(file_name):
     times = []
     phase_grids = []
@@ -26,34 +46,37 @@ def parse_results(file_name):
                     break
     return times, phase_grids
 
+file_name = sys.argv[1]
+times, horizontal_values = parse_horizontal_results(file_name)
+n_simulations = len(horizontal_values[0])
+height = len(horizontal_values[0][0])
 
-sigma = 10
+sigma = 5
 boundary_type = '-'
+# get average profile for each frame
+average_composition_profiles = []
+for t in range(len(times)):
+    profiles = []
+    for k in range(n_simulations):
+        # first gaussian smoothing
+#        smooth_profile = periodic_smooth(horizontal_values[t][k], sigma)
+        smooth_profile = horizontal_values[t][k]
+# then convert from spacings to composition
+        if boundary_type == '-':
+            composition_profile = [s/(2*s+1) for s in smooth_profile]
+#        elif boundary_type = '+':           
+        profiles.append(composition_profile)
+    profiles = np.array(profiles)
+    average_composition_profiles.append(np.mean(profiles, axis=0))
 
-n_runs = 10
-profiles = []
-for n in range(n_runs):
-    print(n)
-    file_name = f'../output/run_{n}.out'
-    times, phase_grids = parse_results(file_name)
-    profiles.append([])
-    for i, phase_grid in enumerate(phase_grids):
-        spacing_grid = get_spacing_pixel_grid(phase_grid)
-        smooth_spacing_grid = spacing_grid.get_smooth_grid(sigma)
-        composition_grid = get_composition_pixel_grid(
-        smooth_spacing_grid, boundary_type)
-        composition_profile = composition_grid.get_horizontal_averages()
-        profiles[-1].append(composition_profile)
-profiles = np.array(profiles)
-avg_profiles = np.mean(profiles, axis=0)
 
 abs_ffts = []
-for profile in avg_profiles:
+for profile in average_composition_profiles:
+    # TODO check offset is constant
     shifted_profile = profile - np.mean(profile) 
     fourier = np.fft.fft(shifted_profile)
     abs_ffts.append(np.abs(fourier))
 abs_ffts = np.array(abs_ffts)
-print(abs_ffts.shape)
 freq = np.fft.fftfreq(abs_ffts.shape[-1])
 
 for i, time in enumerate(times):
@@ -62,7 +85,16 @@ for i, time in enumerate(times):
 plt.legend()
 plt.show()
 
+def exponential(x, a, k):
+    return a*np.exp(x*k)
+
+# TODO linear fit!
 max_fft = np.amax(abs_ffts, axis=1)
+popt_exponential, pcov_exponential = scipy.optimize.curve_fit(exponential, times[1:], max_fft[1:], p0=[max(max_fft), -1/max(times)])
+print(popt_exponential)
+fit_values = [exponential(t, *popt_exponential) for t in times[1:]]
+plt.plot(times[1:], fit_values, 'k-')
 plt.plot(times, max_fft, 'o')
 plt.yscale('log')
 plt.show()
+

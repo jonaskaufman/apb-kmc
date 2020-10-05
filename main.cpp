@@ -1,4 +1,6 @@
 #include "simulation.hpp"
+#include <fstream>
+#include <string>
 
 int main()
 {
@@ -11,19 +13,41 @@ int main()
     // grid.print_pixel_grid(std::cout);
 
     int steps = 10000000;
-    int print_interval = 1000000;
+    int print_interval = 100000;
     int temperature = 300;
 
-    Simulation simulation(BOUNDARY_TYPE::MINUS, grid, temperature);
-    for (int n = 0; n < steps; n++)
+    int n_simulations = 100;
+
+    std::vector<double> times;
+    std::vector<std::vector<std::vector<double>>> average_spacings;
+    for (int k = 0; k < n_simulations; k++)
     {
-        if (n % print_interval == 0)
+        average_spacings.emplace_back(std::vector<std::vector<double>>());
+        Simulation simulation(BOUNDARY_TYPE::MINUS, grid, temperature);
+        for (int n = 0; n < steps; n++)
         {
-            std::cout << simulation.get_time() << std::endl;
-//            simulation.print_phase_pixel_grid(std::cout);
-//            simulation.print_spacings_pixel_grid(std::cout);
-            simulation.print_horizontal_pixel_average_spacings(std::cout);
+            if (n % print_interval == 0)
+            {
+                if (k == 0)
+                {
+                    times.emplace_back(simulation.get_time());
+                }
+                average_spacings[k].emplace_back(simulation.get_horizontal_pixel_average_spacings());
+            }
+            simulation.step();
         }
-        simulation.step();
+    }
+
+    for (int t = 0; t < times.size(); t++)
+    {
+        std::cout << times[t] << std::endl;
+        for (int k = 0; k < n_simulations; k++)
+        {
+            for (auto& a : average_spacings[k][t])
+            {
+                std::cout << a << " ";
+            }
+            std::cout << std::endl;
+        }
     }
 }

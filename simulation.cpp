@@ -185,14 +185,9 @@ void Simulation::print_spacings_pixel_grid(std::ostream& stream) const
     print_pixel_grid(grid.get_spacings_pixel_grid(), stream);
 }
 
-void Simulation::print_horizontal_pixel_average_spacings(std::ostream& stream) const
+std::vector<double> Simulation::get_horizontal_pixel_average_spacings() const
 {
-    std::vector<double> averages = get_horizontal_pixel_averages(grid.get_spacings_pixel_grid());
-    for (auto& a : averages)
-    {
-        stream << a << " ";
-    }
-    stream << std::endl;
+    return get_horizontal_pixel_averages(grid.get_spacings_pixel_grid());
 }
 
 void Simulation::populate_event_list()

@@ -42,6 +42,14 @@ class PixelGrid:
 def gaussian(mu, sigma, x):
     return np.exp(-((x-mu)**2)/(2*(sigma**2)))/(sigma*np.sqrt(2*np.pi))
 
+def periodic_smooth(profile, sigma):
+    smooth_profile = []
+    window = 4*sigma
+    length = len(profile)
+    for i in range(length):
+        values = [profile[(i+j)%length]*gaussian(0, sigma, j) for j in range(-window, window+1)]
+        smooth_profile.append(sum(values))
+    return smooth_profile
 
 def get_spacing_pixel_grid(phase_grid):
     spacing_grid = PixelGrid(phase_grid.width, phase_grid.height)

@@ -1,11 +1,13 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
-#include <iostream>
+// TODO reduce includes
 #include <fstream>
+#include <iostream>
 #include <random>
 #include <utility>
 #include <vector>
+#include "grid.hpp"
 
 /// Random number generator
 class RandomGenerator
@@ -27,56 +29,6 @@ private:
     /// Uniform real distribution on unit interval
     std::uniform_real_distribution<double> uniform_unit_interval_distribution;
 };
-
-/// Periodic grid of simulation cells with phase 0 or 1
-/// Can be staggered rectangular grid (like bricks) or square grid
-class SimulationCellGrid
-{
-public:
-    SimulationCellGrid() = delete;
-
-    /// Construct grid of a given width with regions of alternating phase
-    //  of heights given by spacings.
-    //  An even number of spacings must be given to ensure periodicity
-    SimulationCellGrid(const int& width, const std::vector<int>& spacings, bool stagger);
-
-    /// Grid dimensions
-    const int width;
-    const int height;
-
-    /// Get phase of cell located at x,y
-    bool get_cell_phase(const int& x, const int& y) const;
-
-    /// Flip phase of cell located at x,y from 0 to 1, or vice versa
-    void flip_cell_phase(const int& x, const int& y);
-
-    // TODO: Use typdef or struct for pixel grids?
-    /// Get pixel representation of phase grid
-    //  If stagger is false, pixel grid is a normal grid of square cells
-    //  If stagger is true, cells are doubled along the x direction and staggered along y
-    std::vector<std::vector<int>> get_phase_pixel_grid() const;
-
-    /// Get pixel representation of grid where the value of each pixel
-    //  is equal to the combined vertical distance to the nearest two boundaries
-    std::vector<std::vector<int>> get_spacings_pixel_grid() const;
-
-private:
-    /// Whether grid should be staggered in pixel representation
-    bool stagger;
-
-    /// Phase values of grid
-    std::vector<std::vector<bool>> phase_grid;
-
-    /// Set phase of cell located at x,y
-    void set_cell_phase(const int& x, const int& y, const bool& phase);
-};
-
-// TODO: Come up with a better name
-/// Average pixel values across each row to obtain a vertical profile
-std::vector<double> get_horizontal_pixel_averages(const std::vector<std::vector<int>>& pixel_grid);
-
-/// Print pixel grid to output stream
-void print_pixel_grid(const std::vector<std::vector<int>>& pixel_grid, std::ostream& stream);
 
 // Kinetic events are vectors of indices representing grid cells to flip
 using Event = std::vector<std::pair<int, int>>;
@@ -143,30 +95,6 @@ private:
 
     /// Calculate the repulsion energy change due to a single site flip
     double calculate_repulsion_energy_change(const int& x, const int& y) const;
-};
-
-// Calculate initial spacings from composition profile
-std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& boundary_type,
-                                                     const double& composition_average,
-                                                     const double& composition_amplitude,
-                                                     const int& target_height);
-
-/// Wrapper to set up and perform single or multiple simulations and process their output
-class SimulationWrapper
-{
-public:
-    SimulationWrapper() = delete;
-    SimulationWrapper(const BOUNDARY_TYPE& boundary_type,
-                      const std::vector<int>& initial_spacings,
-                      const double& temperature);
-    void perform_single(const int& total_steps, const int& print_interval, const std::ofstream& output_file_stream);
-    void perform_set(const int& total_steps, const int& print_interval, const std::ofstream& output_file_stream);
-
-private:
-    const BOUNDARY_TYPE boundary_type;
-    const std::vector<int> initial_spacings;
-    const double temperature;
-    //    Simulation simulation;
 };
 
 #endif

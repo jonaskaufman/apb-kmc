@@ -8,18 +8,17 @@
 //  TODO this is average, add in actual barriers
 #define ZETA_MINUS_BARRIER 0.03
 
+#define ZETA_MINUS_KINK_FORM 0.0297
+#define ZETA_MINUS_KINK_MOVE_I 0.0324
+#define ZETA_MINUS_KINK_MOVE_II 0.0331
+
+// TODO does this need to be a function?
 double zeta_minus_boundary_energy(const int& spacing)
 {
     switch (spacing)
     {
     case 1:
         return 0.0543;
-//    case 2:
-//        return 0.01011;
-//    case 3:
-//        return 0.0042;
-//    case 4:
-//        return 0.00003999999996;
     default:
         return 0;
     }

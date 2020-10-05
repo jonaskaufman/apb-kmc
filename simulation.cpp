@@ -1,6 +1,5 @@
 #include "simulation.hpp"
 #include "parameters.hpp"
-#include <iostream>
 #include <numeric>
 #include <random>
 
@@ -26,7 +25,7 @@ double RandomGenerator::sample_unit_interval() { return std::uniform_real_distri
 SimulationCellGrid::SimulationCellGrid(const int& width, const std::vector<int>& spacings, bool stagger)
     : width{width}, height{std::accumulate(spacings.begin(), spacings.end(), 0)}, stagger{stagger}
 {
-    phase_grid = std::vector<std::vector<int>>(width, std::vector<int>(height));
+    phase_grid = std::vector<std::vector<bool>>(width, std::vector<bool>(height));
     int y = 0;
     bool flipped = false;
     for (auto& spacing : spacings)
@@ -48,25 +47,25 @@ SimulationCellGrid::SimulationCellGrid(const int& width, const std::vector<int>&
 
 std::vector<std::vector<int>> SimulationCellGrid::get_phase_pixel_grid() const
 {
-    if (stagger)
+    int pixel_grid_width = (stagger ? 2*width : width); 
+    std::vector<std::vector<int>> pixel_grid(pixel_grid_width, std::vector<int>(height));
+    for (int y = 0; y < height; y++)
     {
-        int pixel_grid_width = 2 * width;
-        std::vector<std::vector<int>> pixel_grid(pixel_grid_width, std::vector<int>(height));
-        for (int y = 0; y < height; y++)
+        for (int x = 0; x < width; x++)
         {
-            for (int x = 0; x < width; x++)
+            int phase = get_cell_phase(x, y);
+            if (stagger)
             {
-                int phase = get_cell_phase(x, y);
                 pixel_grid[2 * x][y] = phase;
                 pixel_grid[modulo(2 * x + 1 - 2 * (y % 2), pixel_grid_width)][y] = phase;
             }
+            else
+            {
+                pixel_grid[x][y] = phase;
+            }
         }
-        return pixel_grid;
     }
-    else
-    {
-        return phase_grid;
-    }
+    return pixel_grid;
 }
 
 std::vector<std::vector<int>> SimulationCellGrid::get_spacings_pixel_grid() const
@@ -106,7 +105,7 @@ std::vector<std::vector<int>> SimulationCellGrid::get_spacings_pixel_grid() cons
     return spacings_pixel_grid;
 }
 
-int SimulationCellGrid::get_cell_phase(const int& x, const int& y) const
+bool SimulationCellGrid::get_cell_phase(const int& x, const int& y) const
 {
     return phase_grid[modulo(x, width)][modulo(y, height)];
 }
@@ -114,10 +113,10 @@ int SimulationCellGrid::get_cell_phase(const int& x, const int& y) const
 void SimulationCellGrid::flip_cell_phase(const int& x, const int& y)
 {
     int current_phase = get_cell_phase(x, y);
-    set_cell_phase(x, y, (current_phase + 1) % 2);
+    set_cell_phase(x, y, !current_phase);
 }
 
-void SimulationCellGrid::set_cell_phase(const int& x, const int& y, const int& phase)
+void SimulationCellGrid::set_cell_phase(const int& x, const int& y, const bool& phase)
 {
     phase_grid[modulo(x, width)][modulo(y, height)] = phase;
 }
@@ -228,7 +227,8 @@ double Simulation::calculate_rate(const Event& event) const
         bool boundary_check = (phase != up_left_phase) ^ (phase != down_left_phase);
         if (flat_check && boundary_check)
         {
-            double barrier = ZETA_MINUS_BARRIER + 0.5 * calculate_total_repulsion_energy_change(event); // TODO calculate barrier in separate function?
+            double barrier = ZETA_MINUS_BARRIER + 0.5 * calculate_total_repulsion_energy_change(
+                                                            event); // TODO calculate barrier in separate function?
             rate = boltzmann_factor(barrier, temperature);
         }
     }

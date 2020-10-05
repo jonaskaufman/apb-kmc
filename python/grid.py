@@ -42,6 +42,15 @@ class PixelGrid:
 def gaussian(mu, sigma, x):
     return np.exp(-((x-mu)**2)/(2*(sigma**2)))/(sigma*np.sqrt(2*np.pi))
 
+def periodic_gaussian_matrix(dimension, sigma):
+    matrix = np.zeros((dimension, dimension))
+    window = 4*sigma
+    for i in range(dimension):
+        for w in range(-window, window+1):
+            j = (i+w)%dimension
+            matrix[i,j] = gaussian(0, sigma, w) 
+    return matrix
+
 def periodic_smooth(profile, sigma):
     smooth_profile = []
     window = 4*sigma

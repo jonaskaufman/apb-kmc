@@ -2,6 +2,7 @@
 #define SIMULATION_H
 
 #include <iostream>
+#include <fstream>
 #include <random>
 #include <utility>
 #include <vector>
@@ -27,7 +28,6 @@ private:
     std::uniform_real_distribution<double> uniform_unit_interval_distribution;
 };
 
-// TODO: Store phase as bool instead of int?
 /// Periodic grid of simulation cells with phase 0 or 1
 /// Can be staggered rectangular grid (like bricks) or square grid
 class SimulationCellGrid
@@ -45,7 +45,7 @@ public:
     const int height;
 
     /// Get phase of cell located at x,y
-    int get_cell_phase(const int& x, const int& y) const;
+    bool get_cell_phase(const int& x, const int& y) const;
 
     /// Flip phase of cell located at x,y from 0 to 1, or vice versa
     void flip_cell_phase(const int& x, const int& y);
@@ -65,10 +65,10 @@ private:
     bool stagger;
 
     /// Phase values of grid
-    std::vector<std::vector<int>> phase_grid;
+    std::vector<std::vector<bool>> phase_grid;
 
     /// Set phase of cell located at x,y
-    void set_cell_phase(const int& x, const int& y, const int& phase);
+    void set_cell_phase(const int& x, const int& y, const bool& phase);
 };
 
 // TODO: Come up with a better name
@@ -104,7 +104,7 @@ public:
     /// Print spacings pixel grid to stream
     void print_spacings_pixel_grid(std::ostream& stream) const;
 
-    /// 
+    ///
     std::vector<double> get_horizontal_pixel_average_spacings() const;
 
     /// Get simulation time
@@ -135,11 +135,38 @@ private:
     /// Calculate the rate of an event given the current configuration
     double calculate_rate(const Event& event) const;
 
+    /// Calculate base barrier for event
+    double calculate_barrier(const Event& event) const;
+
     /// Calculate the repulsion energy change due to an event
     double calculate_total_repulsion_energy_change(const Event& event) const;
 
     /// Calculate the repulsion energy change due to a single site flip
     double calculate_repulsion_energy_change(const int& x, const int& y) const;
+};
+
+// Calculate initial spacings from composition profile
+std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& boundary_type,
+                                                     const double& composition_average,
+                                                     const double& composition_amplitude,
+                                                     const int& target_height);
+
+/// Wrapper to set up and perform single or multiple simulations and process their output
+class SimulationWrapper
+{
+public:
+    SimulationWrapper() = delete;
+    SimulationWrapper(const BOUNDARY_TYPE& boundary_type,
+                      const std::vector<int>& initial_spacings,
+                      const double& temperature);
+    void perform_single(const int& total_steps, const int& print_interval, const std::ofstream& output_file_stream);
+    void perform_set(const int& total_steps, const int& print_interval, const std::ofstream& output_file_stream);
+
+private:
+    const BOUNDARY_TYPE boundary_type;
+    const std::vector<int> initial_spacings;
+    const double temperature;
+    //    Simulation simulation;
 };
 
 #endif

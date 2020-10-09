@@ -1,10 +1,10 @@
 #ifndef WRAPPER_H
 #define WRAPPER_H
 
-#include <vector>
 #include "simulation.hpp"
+#include <vector>
 
-// Calculate initial spacings from composition profile
+/// Calculate initial boundary spacings that will produce the desired composition profile
 std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& boundary_type,
                                                      const double& composition_average,
                                                      const double& composition_amplitude,
@@ -15,17 +15,27 @@ class SimulationWrapper
 {
 public:
     SimulationWrapper() = delete;
+
+    /// 
     SimulationWrapper(const BOUNDARY_TYPE& boundary_type,
                       const std::vector<int>& initial_spacings,
                       const double& temperature);
+
+    /// Perform a single simulation
     void perform_single(const int& total_steps, const int& print_interval, const std::ofstream& output_file_stream);
+
+    /// Perform a set of simulations under the same conditions
     void perform_set(const int& total_steps, const int& print_interval, const std::ofstream& output_file_stream);
 
 private:
+    /// Boundary type for simulations
     const BOUNDARY_TYPE boundary_type;
+
+    /// Initial boundary spacings for simulations
     const std::vector<int> initial_spacings;
+
+    /// Temperature for simulations
     const double temperature;
-    //    Simulation simulation;
 };
 
 #endif

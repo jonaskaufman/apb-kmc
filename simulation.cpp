@@ -92,6 +92,9 @@ double Simulation::calculate_rate(const Event& event) const
         int up_right_phase = grid.get_cell_phase(x_right, y + 1);
         int down_left_phase = grid.get_cell_phase(x_left, y - 1);
         int down_right_phase = grid.get_cell_phase(x_right, y - 1);
+        
+//        bool flat_check = () && ();
+
         bool flat_check = (up_left_phase == up_right_phase) && (down_left_phase == down_right_phase);
         bool boundary_check = (phase != up_left_phase) ^ (phase != down_left_phase);
         if (flat_check && boundary_check)

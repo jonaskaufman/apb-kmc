@@ -24,6 +24,72 @@ SimulationCellGrid::SimulationCellGrid(const int& width, const std::vector<int>&
     }
 }
 
+bool SimulationCellGrid::get_cell_phase(const int& x, const int& y) const
+{
+    return phase_grid[modulo(x, width)][modulo(y, height)];
+}
+
+std::pair<int, int>
+SimulationCellGrid::get_neighbor_indices(const int& x, const int& y, const DIRECTION& direction) const
+{
+    if (stagger && (direction == DIRECTION::N || direction == DIRECTION::S))
+    {
+        // invalid direction
+    }
+    std::pair<int, int> neighbor_indices(x, y);
+    // x coordinate
+    if (direction == DIRECTION::E || direction == DIRECTION::NE || direction == DIRECTION::SE)
+    {
+        if (stagger && (direction != DIRECTION::E))
+        {
+            neighbor_indices.first = modulo(x + 1 * ((y + 1) % 2), width);
+        }
+        else
+        {
+            neighbor_indices.first = modulo(x + 1, width);
+        }
+    }
+    else if (direction == DIRECTION::W || direction == DIRECTION::NW || direction == DIRECTION::SW)
+    {
+        if (stagger && (direction != DIRECTION::W))
+        {
+            neighbor_indices.first = modulo(x - 1 * (y % 2), width);
+        }
+        else
+        {
+            neighbor_indices.first = modulo(x - 1, width);
+        }
+    }
+
+    // y coordinate
+    if (direction == DIRECTION::N || direction == DIRECTION::NE || direction == DIRECTION::NW)
+    {
+        neighbor_indices.second = modulo(y + 1, height);
+    }
+    else if (direction == DIRECTION::S || direction == DIRECTION::SE || direction == DIRECTION::SW)
+    {
+        neighbor_indices.second = modulo(y - 1, height);
+    }
+    return neighbor_indices;
+}
+
+bool SimulationCellGrid::get_neighbor_phase(const int& x, const int& y, const DIRECTION& direction) const
+{
+    std::pair<int, int> neighbor_indices = get_neighbor_indices(x, y, direction);
+    return get_cell_phase(neighbor_indices.first, neighbor_indices.second);
+}
+
+void SimulationCellGrid::flip_cell_phase(const int& x, const int& y)
+{
+    int current_phase = get_cell_phase(x, y);
+    set_cell_phase(x, y, !current_phase);
+}
+
+void SimulationCellGrid::set_cell_phase(const int& x, const int& y, const bool& phase)
+{
+    phase_grid[modulo(x, width)][modulo(y, height)] = phase;
+}
+
 std::vector<std::vector<int>> SimulationCellGrid::get_phase_pixel_grid() const
 {
     int pixel_grid_width = (stagger ? 2 * width : width);
@@ -82,22 +148,6 @@ std::vector<std::vector<int>> SimulationCellGrid::get_spacings_pixel_grid() cons
         }
     }
     return spacings_pixel_grid;
-}
-
-bool SimulationCellGrid::get_cell_phase(const int& x, const int& y) const
-{
-    return phase_grid[modulo(x, width)][modulo(y, height)];
-}
-
-void SimulationCellGrid::flip_cell_phase(const int& x, const int& y)
-{
-    int current_phase = get_cell_phase(x, y);
-    set_cell_phase(x, y, !current_phase);
-}
-
-void SimulationCellGrid::set_cell_phase(const int& x, const int& y, const bool& phase)
-{
-    phase_grid[modulo(x, width)][modulo(y, height)] = phase;
 }
 
 std::vector<double> get_horizontal_pixel_averages(const std::vector<std::vector<int>>& pixel_grid)

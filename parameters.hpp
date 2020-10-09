@@ -11,6 +11,7 @@
 #define ZETA_MINUS_KINK_FORM 0.0297
 #define ZETA_MINUS_KINK_MOVE_I 0.0324
 #define ZETA_MINUS_KINK_MOVE_II 0.0331
+#define ZETA_MINUS_REPULSION 0.0543
 
 // TODO does this need to be a function?
 double zeta_minus_boundary_energy(const int& spacing)

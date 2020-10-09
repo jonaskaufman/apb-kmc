@@ -8,7 +8,7 @@
 /// Non-negative modulo
 inline int modulo(int a, int b) { return ((a % b) + b) % b; }
 
-// Directions
+// Cardinal directions
 enum class DIRECTION
 {
     N,
@@ -21,7 +21,8 @@ enum class DIRECTION
     SW
 };
 
-/// Periodic grid of simulation cells with phase 0 or 1
+/// Periodic grid of simulation cells with phase values 0 or 1
+/// TODO (and sublattice values)
 /// Can be staggered rectangular grid (like bricks) or square grid
 class SimulationCellGrid
 {
@@ -40,11 +41,11 @@ public:
     /// Get phase of cell located at x,y
     bool get_cell_phase(const int& x, const int& y) const;
 
-    /// Get indices of neighboring cell
-    std::pair<int, int> get_neighbor_indices(const int& x, const int& y, const DIRECTION& direction);
+    /// Get indices of a neighbor of cell at x,y specified by direction 
+    std::pair<int, int> get_neighbor_indices(const int& x, const int& y, const DIRECTION& direction) const;
 
-    /// Get phase of neighboring cell
-    bool get_cell_neighbor_phase(const int& x, const int& y, const DIRECTION& direction) const;
+    /// Get phase of a neighbor of cell at x,y specified by direction
+    bool get_neighbor_phase(const int& x, const int& y, const DIRECTION& direction) const;
 
     /// Flip phase of cell located at x,y from 0 to 1, or vice versa
     void flip_cell_phase(const int& x, const int& y);
@@ -60,7 +61,7 @@ public:
     std::vector<std::vector<int>> get_spacings_pixel_grid() const;
 
 private:
-    /// Whether grid should be staggered in pixel representation
+    /// Whether the grid is staggered
     bool stagger;
 
     /// Phase values of grid
@@ -74,6 +75,7 @@ private:
 /// Average pixel values across each row to obtain a vertical profile
 std::vector<double> get_horizontal_pixel_averages(const std::vector<std::vector<int>>& pixel_grid);
 
+/// TODO is this needed?
 /// Print pixel grid to output stream
 void print_pixel_grid(const std::vector<std::vector<int>>& pixel_grid, std::ostream& stream);
 

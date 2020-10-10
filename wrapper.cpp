@@ -46,13 +46,6 @@ SimulationWrapper::SimulationWrapper(const BOUNDARY_TYPE& boundary_type,
 {
 }
 
-Simulation SimulationWrapper::setup()
-{
-    SimulationCellGrid grid(width, initial_spacings, stagger_grid());
-    Simulation simulation(boundary_type, grid, temperature);
-    return simulation;
-}
-
 void SimulationWrapper::perform_single(const int& total_steps,
                                        const int& print_interval,
                                        std::ofstream& output_file_stream)
@@ -78,7 +71,7 @@ void SimulationWrapper::perform_set(const int& total_simulations,
     std::vector<std::vector<std::vector<double>>> average_spacings;
     for (int k = 0; k < total_simulations; k++)
     {
-        std::cout << "Running simulation " << k << "...";
+        std::cout << "Running simulation " << k << "\t...";
         average_spacings.emplace_back(std::vector<std::vector<double>>());
         Simulation simulation = setup();
         for (int n = 0; n < total_steps; n++)
@@ -93,9 +86,9 @@ void SimulationWrapper::perform_set(const int& total_simulations,
             }
             simulation.step();
         }
-        std::cout << "done." << std::endl;
+        std::cout << "\tdone" << std::endl;
     }
-    std::cout << "Writing results file...";
+    std::cout << "Writing results file\t...";
     for (int t = 0; t < times.size(); t++)
     {
         output_file_stream << times[t] << std::endl;
@@ -108,7 +101,14 @@ void SimulationWrapper::perform_set(const int& total_simulations,
             output_file_stream << "\n";
         }
     }
-    std::cout << "done." << std::endl;
+    std::cout << "\tdone" << std::endl;
+}
+
+Simulation SimulationWrapper::setup() const
+{
+    SimulationCellGrid grid(width, initial_spacings, stagger_grid());
+    Simulation simulation(boundary_type, grid, temperature);
+    return simulation;
 }
 
 bool SimulationWrapper::stagger_grid() const { return (boundary_type == BOUNDARY_TYPE::MINUS); }

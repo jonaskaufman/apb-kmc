@@ -22,14 +22,14 @@ public:
                       const std::vector<int>& initial_spacings,
                       const double& temperature);
 
-    /// Set up a single simulation
-    Simulation setup();
-
     /// Perform a single simulation
     void perform_single(const int& total_steps, const int& print_interval, std::ofstream& output_file_stream);
 
     /// Perform a set of simulations under the same conditions
-    void perform_set(const int& total_simulations, const int& total_steps, const int& print_interval, std::ofstream& output_file_stream);
+    void perform_set(const int& total_simulations,
+                     const int& total_steps,
+                     const int& print_interval,
+                     std::ofstream& output_file_stream);
 
 private:
     /// Boundary type for simulations
@@ -43,6 +43,9 @@ private:
 
     /// Temperature for simulations
     const double temperature;
+
+    /// Set up a single simulation
+    Simulation setup() const;
 
     /// Determine whether grid should be staggered based on boundary_type
     bool stagger_grid() const;

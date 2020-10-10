@@ -50,14 +50,14 @@ public:
     /// Attempt one event, update time, update configuration (if accepted)
     void step();
 
-    /// Print phase pixel grid to stream
-    void print_phase_pixel_grid(std::ostream& stream) const;
-
-    /// Print spacings pixel grid to stream
-    void print_spacings_pixel_grid(std::ostream& stream) const;
+    ///
+    PixelGrid get_phase_pixel_grid() const;
 
     ///
-    std::vector<double> get_horizontal_pixel_average_spacings() const;
+    PixelGrid get_composition_pixel_grid() const;
+
+    ///
+    std::vector<double> average_horizontal_composition_pixels() const;
 
     /// Get simulation time
     double get_time() const { return time; }

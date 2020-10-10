@@ -56,7 +56,8 @@ void SimulationWrapper::perform_single(const int& total_steps,
         if (n % print_interval == 0)
         {
             output_file_stream << simulation.get_time() << std::endl;
-            simulation.print_phase_pixel_grid(output_file_stream);
+
+//            simulation.print_phase_pixel_grid(output_file_stream);
         }
         simulation.step();
     }
@@ -68,11 +69,12 @@ void SimulationWrapper::perform_set(const int& total_simulations,
                                     std::ofstream& output_file_stream)
 {
     std::vector<double> times;
-    std::vector<std::vector<std::vector<double>>> average_spacings;
+    std::vector<std::vector<std::vector<double>>> average_compositions;
     for (int k = 0; k < total_simulations; k++)
     {
-        std::cout << "Running simulation " << k << "\t...";
-        average_spacings.emplace_back(std::vector<std::vector<double>>());
+        std::cout << "Running simulation " << k << "..." << std::endl;
+        // TODO could initialize this vector based on known size
+        average_compositions.emplace_back(std::vector<std::vector<double>>());
         Simulation simulation = setup();
         for (int n = 0; n < total_steps; n++)
         {
@@ -82,26 +84,26 @@ void SimulationWrapper::perform_set(const int& total_simulations,
                 {
                     times.emplace_back(simulation.get_time());
                 }
-                average_spacings[k].emplace_back(simulation.get_horizontal_pixel_average_spacings());
+                average_compositions[k].emplace_back(simulation.average_horizontal_composition_pixels());
             }
             simulation.step();
         }
-        std::cout << "\tdone" << std::endl;
+        std::cout << "Done" << std::endl;
     }
-    std::cout << "Writing results file\t...";
+    std::cout << "Writing results file..." << std::endl;
     for (int t = 0; t < times.size(); t++)
     {
         output_file_stream << times[t] << std::endl;
         for (int k = 0; k < total_simulations; k++)
         {
-            for (auto& a : average_spacings[k][t])
+            for (auto& a : average_compositions[k][t])
             {
                 output_file_stream << a << " ";
             }
             output_file_stream << "\n";
         }
     }
-    std::cout << "\tdone" << std::endl;
+    std::cout << "Done" << std::endl;
 }
 
 Simulation SimulationWrapper::setup() const

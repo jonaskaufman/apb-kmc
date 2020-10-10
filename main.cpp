@@ -7,7 +7,7 @@ int main()
     BOUNDARY_TYPE boundary_type = BOUNDARY_TYPE::MINUS;
     double composition_average = 5.0/11.0;
     double composition_amplitude = 0.025;
-        int target_height = 200;
+    int target_height = 250;
     std::vector<int> initial_spacings = spacings_for_sinusoidal_composition(boundary_type, composition_average, composition_amplitude, target_height);
 int width = 20;
 double temperature = 300;

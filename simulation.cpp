@@ -18,7 +18,6 @@ int RandomGenerator::sample_integer_range(const int& maximum_value)
 
 double RandomGenerator::sample_unit_interval() { return std::uniform_real_distribution<double>(0.0, 1.0)(generator); }
 
-
 Simulation::Simulation(const BOUNDARY_TYPE& boundary_type,
                        const SimulationCellGrid& initial_grid,
                        const int& temperature)
@@ -43,19 +42,41 @@ void Simulation::step()
     time += time_step;
 }
 
-void Simulation::print_phase_pixel_grid(std::ostream& stream) const
+PixelGrid Simulation::get_phase_pixel_grid() const { return grid.get_phase_pixel_grid(); }
+
+PixelGrid Simulation::get_composition_pixel_grid() const
 {
-    print_pixel_grid(grid.get_phase_pixel_grid(), stream);
+    const PixelGrid phase_grid = get_phase_pixel_grid();
+    int width = phase_grid.size();
+    int height = phase_grid[0].size();
+    PixelGrid composition_grid(width, std::vector<double>());
+    for (int x = 0; x < width; x++)
+    {
+        for (int y = 0; y < height; y++)
+        {
+            composition_grid[x].push_back(0.5);
+            composition_grid[x].push_back(0.5); 
+            double current_phase = phase_grid[x][y];
+            double next_phase = phase_grid[x][modulo(y + 1, height)];
+            if (next_phase != current_phase)
+            {
+                if (boundary_type == BOUNDARY_TYPE::MINUS)
+                {
+                    composition_grid[x].push_back(0.0);
+                }
+                else
+                {
+                    composition_grid[x].back() = 1.0; 
+                }
+            }
+        }
+    }
+    return composition_grid;
 }
 
-void Simulation::print_spacings_pixel_grid(std::ostream& stream) const
+std::vector<double> Simulation::average_horizontal_composition_pixels() const
 {
-    print_pixel_grid(grid.get_spacings_pixel_grid(), stream);
-}
-
-std::vector<double> Simulation::get_horizontal_pixel_average_spacings() const
-{
-    return get_horizontal_pixel_averages(grid.get_spacings_pixel_grid());
+    return average_horizontal_pixels(get_composition_pixel_grid());
 }
 
 void Simulation::populate_event_list()
@@ -92,8 +113,8 @@ double Simulation::calculate_rate(const Event& event) const
         int up_right_phase = grid.get_cell_phase(x_right, y + 1);
         int down_left_phase = grid.get_cell_phase(x_left, y - 1);
         int down_right_phase = grid.get_cell_phase(x_right, y - 1);
-        
-//        bool flat_check = () && ();
+
+        //        bool flat_check = () && ();
 
         bool flat_check = (up_left_phase == up_right_phase) && (down_left_phase == down_right_phase);
         bool boundary_check = (phase != up_left_phase) ^ (phase != down_left_phase);

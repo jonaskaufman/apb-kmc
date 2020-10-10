@@ -21,6 +21,8 @@ enum class DIRECTION
     SW
 };
 
+using PixelGrid = std::vector<std::vector<double>>;
+
 /// Periodic grid of simulation cells with phase values 0 or 1
 /// TODO (and sublattice values)
 /// Can be staggered rectangular grid (like bricks) or square grid
@@ -54,11 +56,11 @@ public:
     /// Get pixel representation of phase grid
     //  If stagger is false, pixel grid is a normal grid of square cells
     //  If stagger is true, cells are doubled along the x direction and staggered along y
-    std::vector<std::vector<int>> get_phase_pixel_grid() const;
+    PixelGrid get_phase_pixel_grid() const;
 
     /// Get pixel representation of grid where the value of each pixel
     //  is equal to the combined vertical distance to the nearest two boundaries
-    std::vector<std::vector<int>> get_spacings_pixel_grid() const;
+//    std::vector<std::vector<int>> get_spacings_pixel_grid() const;
 
 private:
     /// Whether the grid is staggered
@@ -73,10 +75,10 @@ private:
 
 // TODO: Come up with a better name
 /// Average pixel values across each row to obtain a vertical profile
-std::vector<double> get_horizontal_pixel_averages(const std::vector<std::vector<int>>& pixel_grid);
+std::vector<double> average_horizontal_pixels(const PixelGrid& pixel_grid);
 
 /// TODO is this needed?
 /// Print pixel grid to output stream
-void print_pixel_grid(const std::vector<std::vector<int>>& pixel_grid, std::ostream& stream);
+void print_pixel_grid(const PixelGrid& pixel_grid, std::ostream& stream);
 
 #endif

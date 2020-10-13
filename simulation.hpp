@@ -50,6 +50,9 @@ public:
     /// Attempt one event, update time, update configuration (if accepted)
     void step();
 
+    /// Attempt a number of steps equal to the total number of events considered 
+    void pass();
+
     ///
     PixelGrid get_phase_pixel_grid() const;
 

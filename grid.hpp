@@ -77,7 +77,6 @@ private:
 /// Average pixel values across each row to obtain a vertical profile
 std::vector<double> average_horizontal_pixels(const PixelGrid& pixel_grid);
 
-/// TODO is this needed?
 /// Print pixel grid to output stream
 void print_pixel_grid(const PixelGrid& pixel_grid, std::ostream& stream);
 

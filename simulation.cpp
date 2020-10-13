@@ -42,6 +42,14 @@ void Simulation::step()
     time += time_step;
 }
 
+void Simulation::pass()
+{
+    for (int i = 0; i < event_list.size(); i++)
+    {
+        step();
+    }
+}
+
 PixelGrid Simulation::get_phase_pixel_grid() const { return grid.get_phase_pixel_grid(); }
 
 PixelGrid Simulation::get_composition_pixel_grid() const

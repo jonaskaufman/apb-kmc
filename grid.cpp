@@ -168,7 +168,7 @@ std::vector<double> average_horizontal_pixels(const PixelGrid& pixel_grid)
     return averages;
 }
 
-void print_pixel_grid(const std::vector<std::vector<int>>& pixel_grid, std::ostream& stream)
+void print_pixel_grid(const PixelGrid& pixel_grid, std::ostream& stream)
 {
     for (int y = 0; y < pixel_grid[0].size(); y++)
     {

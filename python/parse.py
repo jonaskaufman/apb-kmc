@@ -64,17 +64,20 @@ for t in range(len(times)):
     profiles = []
     for k in range(n_simulations):
         # first gaussian smoothing
-        #if k == 0:
-        #    plt.plot(horizontal_values[t][k])
         smooth_profile = smoothing_matrix.dot(horizontal_values[t][k])
-        #if k == 0:
-        #    plt.plot(smooth_profile)
-        #    plt.show()
+        if t == 0 and k == 0:
+            plt.plot(horizontal_values[t][k])
+            plt.plot(smooth_profile)
+            plt.xlabel('position')
+            plt.ylabel('composition')
+            plt.show()
         profiles.append(smooth_profile)
     profiles = np.array(profiles)
     average_composition_profiles.append(np.mean(profiles, axis=0))
     plt.plot(average_composition_profiles[t], color=colors[t])
 plt.ylim(0.4, 0.5)
+plt.xlabel('position')
+plt.ylabel('composition')
 plt.show()
 
 # TODO normalize FFT properly?
@@ -100,7 +103,8 @@ max_fft = np.amax(abs_ffts, axis=1)
 supermax = np.amax(max_fft)
 max_fft = max_fft/supermax
 popt_exponential, pcov_exponential = scipy.optimize.curve_fit(exponential, times[1:], max_fft[1:], p0=[max(max_fft), -1/max(times)])
-print(popt_exponential)
+tau = -1/popt_exponential[1]
+print(tau)
 fit_values = [exponential(t, *popt_exponential) for t in times[1:]]
 plt.plot(times[1:], fit_values, 'k-')
 plt.plot(times, max_fft, 'o')

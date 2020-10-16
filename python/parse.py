@@ -80,11 +80,11 @@ plt.xlabel('position')
 plt.ylabel('composition')
 plt.show()
 
+print(np.mean(average_composition_profiles[0]))
 # TODO normalize FFT properly?
 abs_ffts = []
 for profile in average_composition_profiles:
     average_value = np.mean(profile)
-#    print(average_value)
     shifted_profile = profile - average_value
     fourier = np.fft.fft(shifted_profile)
     abs_ffts.append(np.abs(fourier))

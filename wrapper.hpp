@@ -4,11 +4,14 @@
 #include "simulation.hpp"
 #include <vector>
 
-/// Calculate initial boundary spacings that will produce the desired composition profile
+/// Calculate initial boundary spacings that will produce a roughly sinusoidal composition profile with the desired
+/// average, amplitude, and height (wavelength)
 std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& boundary_type,
                                                      const double& composition_average,
                                                      const double& composition_amplitude,
                                                      const int& target_height);
+
+double average_spacing_from_composition(const BOUNDARY_TYPE& boundary_type, const double& composition);
 
 /// Wrapper to set up and perform single or multiple simulations and process their output
 class SimulationWrapper

@@ -1,5 +1,6 @@
 #include "wrapper.hpp"
 #include <fstream>
+#include <numeric>
 #include <string>
 
 int main(int argc, char* argv[])
@@ -21,18 +22,27 @@ int main(int argc, char* argv[])
     }
     BOUNDARY_TYPE boundary_type = (*argv[1] == '-' ? BOUNDARY_TYPE::MINUS : BOUNDARY_TYPE::PLUS);
     int width = std::atoi(argv[2]);
-    int height = std::atoi(argv[3]);
+    int target_height = std::atoi(argv[3]);
     double composition_average = std::stod(argv[4]);
     double composition_amplitude = std::stod(argv[5]);
     double temperature = std::stod(argv[6]);
     int total_simulations = std::atoi(argv[7]);
     int total_passes = std::atoi(argv[8]);
     int print_interval = std::atoi(argv[9]);
-    std::cout << "done" << std::endl;
 
     std::vector<int> initial_spacings =
-        spacings_for_sinusoidal_composition(boundary_type, composition_average, composition_amplitude, height);
-
+        spacings_for_sinusoidal_composition(boundary_type, composition_average, composition_amplitude, target_height);
+    std::cout << "Initial spacings: ";
+    for (auto& a : initial_spacings)
+    {
+        std::cout << a << " ";
+    }
+    std::cout << std::endl;
+    int height = std::accumulate(initial_spacings.begin(), initial_spacings.end(), 0);
+    double spacing_average = (double)height / (double)initial_spacings.size();
+    double target_spacing_average = average_spacing_from_composition(boundary_type, composition_average);
+    std::cout << "Height is " << height << " units (target " << target_height << ")" << std::endl;
+    std::cout << "Average spacing is " << spacing_average << " units (target " << target_spacing_average << ")" << std::endl;
     SimulationWrapper wrapper(boundary_type, width, initial_spacings, temperature);
     std::ofstream composition_profile_file;
     composition_profile_file.open("composition_profile.out");

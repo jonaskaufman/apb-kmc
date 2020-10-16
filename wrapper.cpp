@@ -1,7 +1,10 @@
 #include "wrapper.hpp"
 #include "grid.hpp"
+#include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <fstream>
+#include <numeric>
 #include <vector>
 
 std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& boundary_type,
@@ -9,35 +12,45 @@ std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& bounda
                                                      const double& composition_amplitude,
                                                      const int& target_height)
 {
-    std::vector<int> spacing_samples(target_height, 0);
-    for (int y = 0; y < target_height; y++)
+    double spacing_average = average_spacing_from_composition(boundary_type, composition_average);
+    double spacing_amplitude =
+        std::abs((average_spacing_from_composition(boundary_type, composition_average + composition_amplitude) -
+                  average_spacing_from_composition(boundary_type, composition_average - composition_amplitude))) /
+        2;
+    if (spacing_average - spacing_amplitude < 1)
     {
-        double composition = composition_amplitude * std::cos(y * 2 * M_PI / target_height) + composition_average;
-        int spacing = 0;
-        if (boundary_type == BOUNDARY_TYPE::MINUS)
-        {
-            spacing = std::round(composition / (1 - 2 * composition));
-        }
-        else if (boundary_type == BOUNDARY_TYPE::PLUS)
-        {
-            spacing = std::round(composition / (2 * composition - 1));
-        }
-        spacing_samples[y] = spacing;
+        std::cerr << "Amplitude too large!" << std::endl;
+        return std::vector<int>();
     }
-    std::vector<int> spacings;
-    int y = 0;
-    while (y < target_height / 2)
+    int n_boundaries = std::round((double)target_height / spacing_average);
+    int height = std::round(n_boundaries * spacing_average);
+    std::vector<double> raw_spacings(n_boundaries, -1);
+    for (int i = 0; i < n_boundaries; i++)
     {
-        int next_spacing = spacing_samples[y];
-        spacings.push_back(next_spacing);
-        y += next_spacing;
+        double x = 2 * M_PI * (double)i / (double)n_boundaries;
+        raw_spacings[i] =
+            spacing_amplitude * std::cos((x + M_PI * std::sin(x / 2)) / (1 + std::sin(x / 2))) + spacing_average;
     }
-    int length = spacings.size();
-    for (int i = 0; i < length; i++)
+    double raw_spacings_total = std::accumulate(raw_spacings.begin(), raw_spacings.end(), 0.0);
+    double spacing_scaling = (double)height / raw_spacings_total;
+    std::vector<int> spacings(n_boundaries, -1);
+    for (int i = 0; i < n_boundaries; i++)
     {
-        spacings.push_back(spacings[length - 1 - i]);
+        spacings[i] = std::round(spacing_scaling * raw_spacings[i]);
     }
     return spacings;
+}
+
+double average_spacing_from_composition(const BOUNDARY_TYPE& boundary_type, const double& composition)
+{
+    if (boundary_type == BOUNDARY_TYPE::MINUS)
+    {
+        return (composition / (1 - 2 * composition));
+    }
+    else
+    {
+        return (composition / (2 * composition - 1));
+    }
 }
 
 SimulationWrapper::SimulationWrapper(const BOUNDARY_TYPE& boundary_type,

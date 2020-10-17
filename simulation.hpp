@@ -40,6 +40,13 @@ enum class BOUNDARY_TYPE
     PLUS
 };
 
+/// Sublattices on honeycomb network
+enum class SUBLATTICE
+{
+    A,
+    B
+};
+
 /// Kinetic Monte Carlo simulation
 class Simulation
 {
@@ -98,6 +105,9 @@ private:
 
     /// Calculate the repulsion energy change due to a single site flip
     double calculate_repulsion_energy_change(const int& x, const int& y) const;
+
+    /// Get the sublattice of atom in given cell, based on boundary type and phase
+    SUBLATTICE get_sublattice_of_cell(const int& x, const int& y);
 };
 
 #endif

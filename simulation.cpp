@@ -80,7 +80,7 @@ PixelGrid Simulation::get_composition_pixel_grid() const
             composition_grid[x][modulo(y_c, composition_grid_height)] = 0.0;
             int x_next = modulo(x + 1, width);
             int y_previous = modulo(y_p - 1, phase_grid_height);
-            int y_current = y_p; 
+            int y_current = y_p;
             if (phase_grid[x][y_current] != phase_grid[x_next][y_current])
             {
                 y_p = modulo(y_p + 1, phase_grid_height);
@@ -217,3 +217,26 @@ double Simulation::calculate_repulsion_energy_change(const int& x, const int& y)
     }
     return energy_change;
 }
+
+SUBLATTICE Simulation::get_sublattice_of_cell(const int& x, const int& y)
+{
+    bool phase = grid.get_cell_phase(x, y);
+    bool odd;
+    if (boundary_type == BOUNDARY_TYPE::MINUS)
+    {
+        odd = (modulo(y, 2) == 0);
+    }
+    else // boundary_type == BOUNDARY_TYPE::PLUS
+    {
+        odd = (modulo(x + y, 2) == 0);
+    }
+    if (odd == phase)
+    {
+        return SUBLATTICE::A;
+    }
+    else
+    {
+        return SUBLATTICE::B;
+    }
+}
+

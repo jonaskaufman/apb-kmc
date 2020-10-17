@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-/// Non-negative modulo
+/// Calculates the non-negative value of a modulo b
 inline int modulo(int a, int b) { return ((a % b) + b) % b; }
 
 /// Cardinal directions
@@ -21,63 +21,57 @@ enum class DIRECTION
     SW
 };
 
+/// Two-dimensional square grid of pixel values (x is first dimension, y is second dimension)
 using PixelGrid = std::vector<std::vector<double>>;
 
-/// Periodic grid of simulation cells with phase values 0 or 1
-/// TODO (and sublattice values)
-/// Can be staggered rectangular grid (like bricks) or square grid
+/// Prints a pixel grid to an output stream
+void print_pixel_grid(const PixelGrid& pixel_grid, std::ostream& output_stream);
+
+/// Averages each row of a pixel grid and returns the resulting profile
+std::vector<double> average_pixels_horizontally(const PixelGrid& pixel_grid);
+
+/**
+ * Periodic two-dimensional grid of cells with phase values false (0) or true (1)
+ *
+ * Grid can either be a square grid (like graph paper), or a staggered grid
+ * in which every other row is offset in the x direction by half a cell width (like a brick wall).
+ */
 class SimulationCellGrid
 {
 public:
     SimulationCellGrid() = delete;
 
-    /// Construct grid of a given width with regions of alternating phase
-    //  of heights given by spacings.
-    //  An even number of spacings must be given to ensure periodicity
-    SimulationCellGrid(const int& width, const std::vector<int>& spacings, bool stagger);
+    /// Constructs a grid with blocks of alternating phase in the y direction
+    SimulationCellGrid(int width, const std::vector<int>& block_heights, bool staggered);
 
     /// Grid dimensions
     const int width;
     const int height;
 
-    /// Get phase of cell located at x,y
-    bool get_cell_phase(const int& x, const int& y) const;
+    /// Returns the phase of the cell at (x, y)
+    bool get_cell_phase(int x, int y) const;
 
-    /// Get indices of a neighbor of cell at x,y specified by direction 
-    std::pair<int, int> get_neighbor_indices(const int& x, const int& y, const DIRECTION& direction) const;
+    /// Returns the coordinates of the given neighbor of the cell at (x, y)
+    std::pair<int, int> get_neighbor_indices(int x, int y, DIRECTION neighbor_direction) const;
 
-    /// Get phase of a neighbor of cell at x,y specified by direction
-    bool get_neighbor_phase(const int& x, const int& y, const DIRECTION& direction) const;
+    /// Returns the phase of the given neighbor of the cell at (x, y)
+    bool get_neighbor_phase(int x, int y, DIRECTION neighbor_direction) const;
 
-    /// Flip phase of cell located at x,y from 0 to 1, or vice versa
-    void flip_cell_phase(const int& x, const int& y);
+    /// Flips the phase of the cell at (x, y) to the opposite of its current value
+    void flip_cell_phase(int x, int y);
 
-    // TODO: Use typdef or struct for pixel grids?
-    /// Get pixel representation of phase grid
-    //  If stagger is false, pixel grid is a normal grid of square cells
-    //  If stagger is true, cells are doubled along the x direction and staggered along y
+    /// Returns a pixel representation of the grid with phases 0 or 1. Width is doubled if staggered.
     PixelGrid get_phase_pixel_grid() const;
-
-    /// Get pixel representation of grid where the value of each pixel
-    //  is equal to the combined vertical distance to the nearest two boundaries
-//    std::vector<std::vector<int>> get_spacings_pixel_grid() const;
 
 private:
     /// Whether the grid is staggered
-    bool stagger;
+    bool staggered;
 
-    /// Phase values of grid
+    /// Phase values of the grid
     std::vector<std::vector<bool>> phase_grid;
 
-    /// Set phase of cell located at x,y
-    void set_cell_phase(const int& x, const int& y, const bool& phase);
+    /// Sets the phase value of the cell at (x, y)
+    void set_cell_phase(int x, int y, bool phase);
 };
-
-// TODO: Come up with a better name
-/// Average pixel values across each row to obtain a vertical profile
-std::vector<double> average_horizontal_pixels(const PixelGrid& pixel_grid);
-
-/// Print pixel grid to output stream
-void print_pixel_grid(const PixelGrid& pixel_grid, std::ostream& stream);
 
 #endif

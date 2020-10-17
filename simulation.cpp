@@ -98,7 +98,7 @@ PixelGrid Simulation::get_composition_pixel_grid() const
 
 std::vector<double> Simulation::average_horizontal_composition_pixels() const
 {
-    return average_horizontal_pixels(get_composition_pixel_grid());
+    return average_pixels_horizontally(get_composition_pixel_grid());
 }
 
 void Simulation::populate_event_list()

@@ -8,7 +8,7 @@
 /// Non-negative modulo
 inline int modulo(int a, int b) { return ((a % b) + b) % b; }
 
-// Cardinal directions
+/// Cardinal directions
 enum class DIRECTION
 {
     N,

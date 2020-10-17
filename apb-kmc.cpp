@@ -1,6 +1,7 @@
 #include "wrapper.hpp"
 #include <fstream>
 #include <numeric>
+#include <stdexcept>
 #include <string>
 
 int main(int argc, char* argv[])
@@ -67,9 +68,9 @@ int main(int argc, char* argv[])
         }
         composition_profile_file.close();
     }
-    catch (const std::invalid_argument& error)
+    catch (const std::runtime_error& error)
     {
-        std::cerr << "Invalid argument: " << error.what() << std::endl;
+        std::cerr << "Runtime error: " << error.what() << std::endl;
     }
     return 0;
 };

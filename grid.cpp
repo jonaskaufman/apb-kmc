@@ -7,7 +7,7 @@ SimulationCellGrid::SimulationCellGrid(const int& width, const std::vector<int>&
 {
     if (width % 2 != 0 || height % 2 != 0)
     {
-        throw std::invalid_argument("Grid dimensions must be even to achieve periodicity!");
+        throw std::runtime_error("Grid dimensions must be even to achieve periodicity!");
     }
     phase_grid = std::vector<std::vector<bool>>(width, std::vector<bool>(height));
     int y = 0;

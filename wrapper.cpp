@@ -104,12 +104,10 @@ void SimulationWrapper::perform_set(const int& total_simulations,
                                     std::ofstream& composition_profile_file_stream)
 {
     std::vector<double> times;
-    std::vector<std::vector<std::vector<double>>> average_compositions;
+    std::vector<std::vector<std::vector<double>>> average_compositions(total_simulations, std::vector<std::vector<double>>());
     for (int k = 0; k < total_simulations; k++)
     {
         std::cout << "Running simulation " << k << "..." << std::endl;
-        // TODO could initialize this vector based on known size
-        average_compositions.emplace_back(std::vector<std::vector<double>>());
         Simulation simulation = setup();
         for (int n = 0; n < total_passes; n++)
         {
@@ -117,9 +115,9 @@ void SimulationWrapper::perform_set(const int& total_simulations,
             {
                 if (k == 0)
                 {
-                    times.emplace_back(simulation.get_time());
+                    times.push_back(simulation.get_time());
                 }
-                average_compositions[k].emplace_back(simulation.average_horizontal_composition_pixels());
+                average_compositions[k].push_back(simulation.average_horizontal_composition_pixels());
             }
             simulation.pass();
         }

@@ -23,13 +23,17 @@ std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& bounda
         return std::vector<int>();
     }
     int n_boundaries = std::round((double)target_height / spacing_average);
+    if (n_boundaries %2 != 0)
+    {
+        n_boundaries += 1;  
+    }
     int height = std::round(n_boundaries * spacing_average);
     std::vector<double> raw_spacings(n_boundaries, -1);
     for (int i = 0; i < n_boundaries; i++)
     {
         double x = 2 * M_PI * (double)i / (double)n_boundaries;
-        raw_spacings[i] =
-            spacing_amplitude * std::cos((x + M_PI * std::sin(x / 2)) / (1 + std::sin(x / 2))) + spacing_average;
+        double arg_scaling = std::sin(x / 2);
+        raw_spacings[i] = spacing_amplitude * std::cos((x + M_PI * arg_scaling) / (1 + arg_scaling)) + spacing_average;
     }
     double raw_spacings_total = std::accumulate(raw_spacings.begin(), raw_spacings.end(), 0.0);
     double spacing_scaling = (double)height / raw_spacings_total;
@@ -37,6 +41,11 @@ std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& bounda
     for (int i = 0; i < n_boundaries; i++)
     {
         spacings[i] = std::round(spacing_scaling * raw_spacings[i]);
+    }
+    height = std::accumulate(spacings.begin(), spacings.end(), 0);
+    if (height %2 != 0)
+    {
+        spacings[0] += 1; 
     }
     return spacings;
 }
@@ -68,6 +77,7 @@ void SimulationWrapper::perform_single(const int& total_passes,
                                        std::ofstream& composition_profile_file_stream)
 {
     Simulation simulation = setup();
+    std::cout << "Running simulation..." << std::endl;
     for (int n = 0; n < total_passes; n++)
     {
         if (n % print_interval == 0)
@@ -85,6 +95,7 @@ void SimulationWrapper::perform_single(const int& total_passes,
         }
         simulation.pass();
     }
+        std::cout << "Done. Results files written." << std::endl;
 }
 
 void SimulationWrapper::perform_set(const int& total_simulations,

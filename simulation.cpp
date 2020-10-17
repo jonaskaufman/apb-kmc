@@ -56,26 +56,40 @@ PixelGrid Simulation::get_composition_pixel_grid() const
 {
     const PixelGrid phase_grid = get_phase_pixel_grid();
     int width = phase_grid.size();
-    int height = phase_grid[0].size();
-    PixelGrid composition_grid(width, std::vector<double>());
-    for (int x = 0; x < width; x++)
+    int phase_grid_height = phase_grid[0].size();
+    std::vector<int> boundary_y_origins;
+    for (int y = 0; y < phase_grid_height; y++)
     {
-        for (int y = 0; y < height; y++)
+        double current_phase = phase_grid[0][y];
+        double previous_phase = phase_grid[0][modulo(y - 1, phase_grid_height)];
+        if (current_phase != previous_phase)
         {
-            composition_grid[x].push_back(0.5);
-            composition_grid[x].push_back(0.5); 
-            double current_phase = phase_grid[x][y];
-            double next_phase = phase_grid[x][modulo(y + 1, height)];
-            if (next_phase != current_phase)
+            boundary_y_origins.push_back(y);
+        }
+    }
+    int n_boundaries = boundary_y_origins.size();
+    // TODO fix for zeta plus boundaries too
+    int composition_grid_height = 2 * phase_grid_height + n_boundaries;
+    PixelGrid composition_grid(width, std::vector<double>(composition_grid_height, 0.5));
+    for (int b = 0; b < n_boundaries; b++)
+    {
+        int y_p = boundary_y_origins[b];
+        int y_c = 2 * y_p + b;
+        for (int x = 0; x < width; x++)
+        {
+            composition_grid[x][modulo(y_c, composition_grid_height)] = 0.0;
+            int x_next = modulo(x + 1, width);
+            int y_previous = modulo(y_p - 1, phase_grid_height);
+            int y_current = y_p; 
+            if (phase_grid[x][y_current] != phase_grid[x_next][y_current])
             {
-                if (boundary_type == BOUNDARY_TYPE::MINUS)
-                {
-                    composition_grid[x].push_back(0.0);
-                }
-                else
-                {
-                    composition_grid[x].back() = 1.0; 
-                }
+                y_p = modulo(y_p + 1, phase_grid_height);
+                y_c += 2;
+            }
+            else if (phase_grid[x][y_previous] != phase_grid[x_next][y_previous])
+            {
+                y_p = modulo(y_p - 1, phase_grid_height);
+                y_c -= 2;
             }
         }
     }

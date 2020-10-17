@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import scipy.optimize
 
-def fit_func(x, a, b, c):
-    return a*x*x + b*x*x*x*x + c*0*x*x*x*x*x*x
+def fit_func(x, a):
+    return a*x*x
 
 data = np.loadtxt(sys.argv[1], skiprows=1)
 wavelength = data[:,0]
@@ -21,7 +21,7 @@ plt.tight_layout()
 plt.show()
 
 
-opt, cov = scipy.optimize.curve_fit(fit_func, inverse_wavelength, inverse_time, p0=[1, 1, 1])
+opt, cov = scipy.optimize.curve_fit(fit_func, inverse_wavelength, inverse_time, p0=[1])
 print(opt)
 samples = np.linspace(0, max(inverse_wavelength), 10)
 fitted = [fit_func(x, *opt) for x in samples]

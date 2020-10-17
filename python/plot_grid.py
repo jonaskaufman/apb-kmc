@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import scipy.optimize
 
-def parse_horizontal_results(file_name):
+def parse_profile_file(file_name):
     times = []
-    horizontal_values = [] 
+    profiles = [] 
     with open(file_name, 'r') as f:
         group = [] 
         while True:
@@ -16,37 +16,70 @@ def parse_horizontal_results(file_name):
                 group.append(list(map(float, split_line)))
             else:
                 if group:
-                    horizontal_values.append(group)
+                    profiles.append(group)
                 if len(split_line) == 1:
                     times.append(float(split_line[0]))
                     group = []
                 else:
                     break
-    return times, horizontal_values
+    return times, profiles
 
 # for grid values
-def parse_results(file_name):
+def parse_grid_file(file_name):
     times = []
-    phase_grids = []
+    grids = []
     with open(file_name, 'r') as f:
         next_grid = []
         while True:
             split_line = f.readline().split()
             if len(split_line) > 1:
-                values = list(map(int, split_line))
+                values = list(map(float, split_line))
                 next_grid.append(values)
             else:
                 if next_grid:
-                    phase_grids.append(
+                    grids.append(
                         PixelGrid(len(next_grid[0]), len(next_grid)))
-                    phase_grids[-1].set_grid(next_grid)
+                    grids[-1].set_grid(next_grid)
                 if len(split_line) == 1:
                     times.append(float(split_line[0]))
                     next_grid = []
                 else:   # end of file
                     break
-    return times, phase_grids
+    return times, grids
 
+phase_grid_file = sys.argv[1]
+composition_grid_file = sys.argv[2]
+composition_profile_file = sys.argv[3]
+times, phase_grids = parse_grid_file(phase_grid_file)
+times, composition_grids = parse_grid_file(composition_grid_file)
+times, composition_profiles = parse_profile_file(composition_profile_file)
+height = len(composition_profiles[0][0])
+sigma = 20
+smoothing_matrix = periodic_gaussian_matrix(height, sigma)
+for i in range(len(times)):
+    fig, ax = plt.subplots(1 , 3, figsize=(3,5))
+    ax[0].imshow(phase_grids[i].grid, aspect=1, origin='lower', vmin=-0.75, vmax=1.5, cmap='Greys')
+    ax[1].imshow(composition_grids[i].grid, aspect=0.5, origin='lower', vmin=0, vmax=1, cmap='viridis')
+    profile = composition_profiles[i][0]
+    smooth_profile = smoothing_matrix.dot(profile)
+#    ax[0].axis('off')
+    ax[1].axis('off')
+    ax[2].plot(profile, range(height), '0.8',zorder=0)
+    ax[2].scatter(profile, range(height), s=1, c=profile, cmap='viridis', vmin=0, vmax=1, zorder=1)
+    ax[2].plot(smooth_profile, range(height), 'k')
+    ax[2].set_ylim(0, height)
+    ax[2].set_xlim(-0.05, 0.55)
+
+    ax[2].set_xlabel('composition')
+    ax[2].get_yaxis().set_visible(False)
+    plt.tight_layout()
+    plt.show()
+#    plt.savefig('plot.png', dpi=600)
+
+times, composition_profiles = parse_profile_file(composition_profile_file)
+
+
+"""
 file_name = sys.argv[1]
 times, horizontal_values = parse_horizontal_results(file_name)
 n_simulations = len(horizontal_values[0])
@@ -119,4 +152,4 @@ plt.plot(times[1:], fit_values, 'k-')
 plt.plot(times, max_fft, 'o')
 plt.yscale('log')
 plt.show()
-
+"""

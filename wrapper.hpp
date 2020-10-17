@@ -11,7 +11,11 @@ std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& bounda
                                                      const double& composition_amplitude,
                                                      const int& target_height);
 
+///
 double average_spacing_from_composition(const BOUNDARY_TYPE& boundary_type, const double& composition);
+
+/// Height accounting for height of boundaries themselves
+double actual_height(const BOUNDARY_TYPE& boundary_type, const std::vector<int>& spacings);
 
 /// Wrapper to set up and perform single or multiple simulations and process their output
 class SimulationWrapper

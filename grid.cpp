@@ -1,9 +1,14 @@
 #include "grid.hpp"
 #include <numeric>
+#include <stdexcept>
 
 SimulationCellGrid::SimulationCellGrid(const int& width, const std::vector<int>& spacings, bool stagger)
     : width{width}, height{std::accumulate(spacings.begin(), spacings.end(), 0)}, stagger{stagger}
 {
+    if (width % 2 != 0 || height % 2 != 0)
+    {
+        throw std::invalid_argument("Grid dimensions must be even to achieve periodicity!");
+    }
     phase_grid = std::vector<std::vector<bool>>(width, std::vector<bool>(height));
     int y = 0;
     bool flipped = false;

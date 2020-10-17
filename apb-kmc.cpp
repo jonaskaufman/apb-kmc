@@ -42,25 +42,34 @@ int main(int argc, char* argv[])
     double spacing_average = (double)height / (double)initial_spacings.size();
     double target_spacing_average = average_spacing_from_composition(boundary_type, composition_average);
     std::cout << "Height is " << height << " units (target " << target_height << ")" << std::endl;
-    std::cout << "Average spacing is " << spacing_average << " units (target " << target_spacing_average << ")" << std::endl;
-    SimulationWrapper wrapper(boundary_type, width, initial_spacings, temperature);
-    std::ofstream composition_profile_file;
-    composition_profile_file.open("composition_profile.out");
-    if (total_simulations == 1)
+    std::cout << "Average spacing is " << spacing_average << " units (target " << target_spacing_average << ")"
+              << std::endl;
+
+    try
     {
-        std::ofstream phase_grid_file;
-        phase_grid_file.open("phase_grid.out");
-        std::ofstream composition_grid_file;
-        composition_profile_file.open("composition_grid.out");
-        wrapper.perform_single(total_passes, print_interval, phase_grid_file, composition_grid_file,
-                               composition_profile_file);
-        phase_grid_file.close();
-        composition_grid_file.close();
+        SimulationWrapper wrapper(boundary_type, width, initial_spacings, temperature);
+        std::ofstream composition_profile_file;
+        composition_profile_file.open("composition_profile.out");
+        if (total_simulations == 1)
+        {
+            std::ofstream phase_grid_file;
+            phase_grid_file.open("phase_grid.out");
+            std::ofstream composition_grid_file;
+            composition_grid_file.open("composition_grid.out");
+            wrapper.perform_single(total_passes, print_interval, phase_grid_file, composition_grid_file,
+                                   composition_profile_file);
+            phase_grid_file.close();
+            composition_grid_file.close();
+        }
+        else
+        {
+            wrapper.perform_set(total_simulations, total_passes, print_interval, composition_profile_file);
+        }
+        composition_profile_file.close();
     }
-    else
+    catch (const std::invalid_argument& error)
     {
-        wrapper.perform_set(total_simulations, total_passes, print_interval, composition_profile_file);
+        std::cerr << "Invalid argument: " << error.what() << std::endl;
     }
-    composition_profile_file.close();
     return 0;
 };

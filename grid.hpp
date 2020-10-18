@@ -48,6 +48,9 @@ public:
     const int width;
     const int height;
 
+    /// Whether the grid is staggered
+    const bool staggered;
+
     /// Returns the phase of the cell at (x, y)
     bool get_cell_phase(int x, int y) const;
 
@@ -64,9 +67,6 @@ public:
     PixelGrid get_phase_pixel_grid() const;
 
 private:
-    /// Whether the grid is staggered
-    bool staggered;
-
     /// Phase values of the grid
     std::vector<std::vector<bool>> phase_grid;
 

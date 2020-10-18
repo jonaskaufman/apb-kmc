@@ -1,6 +1,7 @@
 #include "simulation.hpp"
 #include "parameters.hpp"
 #include <random>
+#include <stdexcept>
 
 /// Boltzmann factor
 inline double boltzmann_factor(double barrier, double temperature) { return std::exp(-barrier / (KB * temperature)); }
@@ -21,7 +22,12 @@ double RandomGenerator::sample_unit_interval() { return std::uniform_real_distri
 Simulation::Simulation(BOUNDARY_TYPE boundary_type, const SimulationCellGrid& initial_grid, int temperature)
     : boundary_type{boundary_type}, grid{initial_grid}, time{0}, temperature{temperature}
 {
-    // TODO check stagger compatible with boundary type
+    // Check if grid is compatible with boundary type
+    bool correct_staggered = (boundary_type == BOUNDARY_TYPE::MINUS);
+    if (grid.staggered != correct_staggered)
+    {
+        throw std::runtime_error("Boundary type not compatible with grid.");
+    }
     populate_event_list();
 }
 
@@ -219,16 +225,16 @@ double Simulation::calculate_repulsion_energy_change(int x, int y) const
 SUBLATTICE Simulation::get_sublattice_of_cell(int x, int y)
 {
     bool phase = grid.get_cell_phase(x, y);
-    bool odd;
+    bool even;
     if (boundary_type == BOUNDARY_TYPE::MINUS)
     {
-        odd = (modulo(y, 2) == 0);
+        even = (modulo(y, 2) == 0);
     }
     else // boundary_type == BOUNDARY_TYPE::PLUS
     {
-        odd = (modulo(x + y, 2) == 0);
+        even = (modulo(x + y, 2) == 0);
     }
-    if (odd == phase)
+    if (even == !phase)
     {
         return SUBLATTICE::A;
     }

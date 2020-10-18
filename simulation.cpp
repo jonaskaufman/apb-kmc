@@ -11,16 +11,14 @@ RandomGenerator::RandomGenerator()
     generator = std::mt19937_64(device());
 }
 
-int RandomGenerator::sample_integer_range(const int& maximum_value)
+int RandomGenerator::sample_integer_range(int maximum_value)
 {
     return std::uniform_int_distribution<int>(0, maximum_value)(generator);
 }
 
 double RandomGenerator::sample_unit_interval() { return std::uniform_real_distribution<double>(0.0, 1.0)(generator); }
 
-Simulation::Simulation(const BOUNDARY_TYPE& boundary_type,
-                       const SimulationCellGrid& initial_grid,
-                       const int& temperature)
+Simulation::Simulation(BOUNDARY_TYPE boundary_type, const SimulationCellGrid& initial_grid, int temperature)
     : boundary_type{boundary_type}, grid{initial_grid}, time{0}, temperature{temperature}
 {
     // TODO check stagger compatible with boundary type
@@ -96,7 +94,7 @@ PixelGrid Simulation::get_composition_pixel_grid() const
     return composition_grid;
 }
 
-std::vector<double> Simulation::average_horizontal_composition_pixels() const
+std::vector<double> Simulation::get_average_composition_profile() const
 {
     return average_pixels_horizontally(get_composition_pixel_grid());
 }
@@ -167,7 +165,7 @@ double Simulation::calculate_total_repulsion_energy_change(const Event& event) c
 }
 
 // TODO: Change to nearest-neighbor boundary only
-double Simulation::calculate_repulsion_energy_change(const int& x, const int& y) const
+double Simulation::calculate_repulsion_energy_change(int x, int y) const
 {
     double energy_change = 0;
     int phase = grid.get_cell_phase(x, y);
@@ -218,7 +216,7 @@ double Simulation::calculate_repulsion_energy_change(const int& x, const int& y)
     return energy_change;
 }
 
-SUBLATTICE Simulation::get_sublattice_of_cell(const int& x, const int& y)
+SUBLATTICE Simulation::get_sublattice_of_cell(int x, int y)
 {
     bool phase = grid.get_cell_phase(x, y);
     bool odd;

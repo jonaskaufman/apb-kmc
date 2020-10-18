@@ -87,7 +87,7 @@ void SimulationWrapper::perform_single(const int& total_passes,
             composition_profile_file_stream << simulation.get_time() << std::endl;
             print_pixel_grid(simulation.get_phase_pixel_grid(), phase_grid_file_stream);
             print_pixel_grid(simulation.get_composition_pixel_grid(), composition_grid_file_stream);
-            for (auto& a : simulation.average_horizontal_composition_pixels())
+            for (auto& a : simulation.get_average_composition_profile())
             {
                 composition_profile_file_stream << a << " ";
             }
@@ -117,7 +117,7 @@ void SimulationWrapper::perform_set(const int& total_simulations,
                 {
                     times.push_back(simulation.get_time());
                 }
-                average_compositions[k].push_back(simulation.average_horizontal_composition_pixels());
+                average_compositions[k].push_back(simulation.get_average_composition_profile());
             }
             simulation.pass();
         }

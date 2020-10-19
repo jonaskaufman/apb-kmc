@@ -63,7 +63,7 @@ public:
     /// Flips the phase of the cell at (x, y) to the opposite of its current value
     void flip_cell_phase(int x, int y);
 
-    /// Returns a pixel representation of the grid with phases 0 or 1. Width is doubled if staggered.
+    /// Returns a pixel representation of the grid with phases 0 or 1. Width is always doubled.
     PixelGrid get_phase_pixel_grid() const;
 
 private:

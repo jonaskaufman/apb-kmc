@@ -139,24 +139,18 @@ void SimulationCellGrid::set_cell_phase(int x, int y, bool phase)
 PixelGrid SimulationCellGrid::get_phase_pixel_grid() const
 {
     // Double width if staggered
-    int pixel_grid_width = (staggered ? 2 * width : width);
+    int pixel_grid_width = 2 * width;
     PixelGrid pixel_grid(pixel_grid_width, std::vector<double>(height, -1.0));
     for (int y = 0; y < height; y++)
     {
         // Set values for current row
         for (int x = 0; x < width; x++)
         {
+            // Each cell becomes two pixels
             int phase = get_cell_phase(x, y);
-            if (staggered)
-            {
-                // Each cell becomes two pixels if staggered
-                pixel_grid[2 * x][y] = phase;
-                pixel_grid[modulo(2 * x + 1 - 2 * (y % 2), pixel_grid_width)][y] = phase;
-            }
-            else
-            {
-                pixel_grid[x][y] = phase;
-            }
+            int x_next = staggered ? (2 * x + 1 - 2 * (y % 2)) : (2 * x + 1);
+            pixel_grid[2 * x][y] = phase;
+            pixel_grid[modulo(x_next, pixel_grid_width)][y] = phase;
         }
         // Check that all values have been set
         for (int x = 0; x < pixel_grid_width; x++)

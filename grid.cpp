@@ -119,10 +119,21 @@ std::pair<int, int> SimulationCellGrid::get_neighbor_indices(int x, int y, DIREC
     return std::make_pair(modulo(x + dx, width), modulo(y + dy, height));
 }
 
+std::pair<int, int> SimulationCellGrid::get_neighbor_indices(const std::pair<int, int>& coordinates,
+                                                             DIRECTION neighbor_direction) const
+{
+    return get_neighbor_indices(coordinates.first, coordinates.second, neighbor_direction);
+}
+
 bool SimulationCellGrid::get_neighbor_phase(int x, int y, DIRECTION neighbor_direction) const
 {
     std::pair<int, int> neighbor_indices = get_neighbor_indices(x, y, neighbor_direction);
     return get_cell_phase(neighbor_indices.first, neighbor_indices.second);
+}
+
+bool SimulationCellGrid::get_neighbor_phase(const std::pair<int, int>& coordinates, DIRECTION neighbor_direction) const
+{
+    return get_neighbor_phase(coordinates.first, coordinates.second, neighbor_direction);
 }
 
 void SimulationCellGrid::flip_cell_phase(int x, int y)

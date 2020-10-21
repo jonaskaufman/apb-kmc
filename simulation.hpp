@@ -99,16 +99,32 @@ private:
     RandomGenerator random_generator;
 
     /// Populates the event list based on the grid dimensions and boundary type
+    // NOTE: for two atom events, they are always listed in L->R order
     void populate_event_list();
-
-    /// Returns the sublattice (A or B) of the atom in given cell based on boundary type and phase
-    SUBLATTICE get_sublattice_of_cell(int x, int y);
 
     /// Returns the rate of an event given the current configuration
     double calculate_rate(const Event& event) const;
 
-    /// Returns the base kinetic barrier for an event
+    ///
+    bool is_valid_event(const Event& event) const;
+
+    ///
+    bool is_valid_event_zeta_minus(const Event& event) const;
+
+    ///
+    bool is_valid_event_zeta_plus(const Event& event) const;
+
+    /// Returns the kinetic barrier for an event
     double calculate_barrier(const Event& event) const;
+
+    ///
+    double calculate_barrier_zeta_minus(const Event& event) const;
+
+    ///
+    double calculate_barrier_zeta_plus(const Event& event) const;
+
+    /// Returns the sublattice (A or B) of the atom in given cell based on boundary type and phase
+    SUBLATTICE get_sublattice_of_cell(int x, int y);
 
     /// Returns the total boundary repulsion energy change for an event
     double calculate_total_repulsion_energy_change(const Event& event) const;

@@ -1,11 +1,12 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
+#include "definitions.hpp"
 #include "grid.hpp"
+#include "calculator.hpp"
 #include <fstream>
 #include <iostream>
 #include <random>
-#include <utility>
 #include <vector>
 
 /**
@@ -33,25 +34,8 @@ private:
     std::uniform_real_distribution<double> uniform_unit_interval_distribution;
 };
 
-// Kinetic event represented by indices of grid cells to flip
-using Event = std::vector<std::pair<int, int>>;
-
-/// Antiphase boundary types (zeta minus or zeta plus)
-enum class BOUNDARY_TYPE
-{
-    MINUS,
-    PLUS
-};
-
-/// Sublattices on honeycomb network
-enum class SUBLATTICE
-{
-    A,
-    B
-};
-
 /**
- * Kinetic Monte Carlo simulations
+ * Kinetic Monte Carlo simulation
  */
 class Simulation
 {
@@ -59,7 +43,7 @@ public:
     Simulation() = delete;
 
     /// Constructs a simulation for given boundary type with initial grid and temperature (in kelvin)
-    Simulation(BOUNDARY_TYPE boundary_type, const SimulationCellGrid& initial_grid, int temperature);
+    Simulation(BOUNDARY_TYPE boundary_type, const SimulationCellGrid& initial_grid, double temperature);
 
     /// Attempts one event, updates the time and configuration accordingly
     void step();
@@ -84,19 +68,22 @@ private:
     SimulationCellGrid grid;
 
     /// Type of boundary being simulated
-    BOUNDARY_TYPE boundary_type;
+    const BOUNDARY_TYPE boundary_type;
 
     /// Simulation time, in units of reciprocal vibrational prefactor
     double time;
 
     /// Simulation temperature, in kelvin
-    int temperature;
+    const double temperature;
 
     /// List of all possible events that can occur over the course of a simulation
     std::vector<Event> event_list;
 
     /// Random number generator to be used throughout simulation
     RandomGenerator random_generator;
+
+    ///
+    EventRateCalculator rate_calculator;
 
     /// Populates the event list based on the grid dimensions and boundary type
     // NOTE: for two atom events, they are always listed in L->R order

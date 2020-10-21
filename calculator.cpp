@@ -1,5 +1,4 @@
 #include "calculator.hpp"
-#include "grid.hpp"
 #include <cmath>
 
 inline double boltzmann_factor(double barrier, double temperature) { return std::exp(-barrier / (KB * temperature)); }
@@ -41,23 +40,10 @@ bool EventRateCalculator::is_valid_event_zeta_minus(const Event& event, const Si
     {
         return false;
     }
-    // Cell must be at boundary
-    int x = event[0].first;
-    int y = event[0].second;
-    bool phase_NW = grid.get_neighbor_phase(x, y, DIRECTION::NW);
-    bool phase_SW = grid.get_neighbor_phase(x, y, DIRECTION::SW);
-    if (phase_NW == phase_SW)
-    {
-        return false;
-    }
-    // Boundary must be flat
-    bool phase_NE = grid.get_neighbor_phase(x, y, DIRECTION::NE);
-    bool phase_SE = grid.get_neighbor_phase(x, y, DIRECTION::SE);
-    if ((phase_NW != phase_NE) || (phase_SW != phase_SE))
-    {
-        return false;
-    }
-    return true;
+    // Cell must be at a flat boundary, and not be the only cell separating two boundaries
+    bool above = boundary_above(event[0], grid);
+    bool below = boundary_below(event[0], grid);
+    return (above ^ below);
 }
 
 bool EventRateCalculator::is_valid_event_zeta_plus(const Event& event, const SimulationCellGrid& grid) const
@@ -69,32 +55,20 @@ bool EventRateCalculator::is_valid_event_zeta_plus(const Event& event, const Sim
     }
     for (const auto& coordinates : event)
     {
-        // Cell must be at boundary
-        int x = coordinates.first;
-        int y = coordinates.second;
-        bool phase_N = grid.get_neighbor_phase(x, y, DIRECTION::N);
-        bool phase_S = grid.get_neighbor_phase(x, y, DIRECTION::S);
-        if (phase_N == phase_S)
-        {
-            return false;
-        }
-        // Boundary must be flat
-        bool phase_NW = grid.get_neighbor_phase(x, y, DIRECTION::NW);
-        bool phase_SW = grid.get_neighbor_phase(x, y, DIRECTION::SW);
-        bool phase_NE = grid.get_neighbor_phase(x, y, DIRECTION::NE);
-        bool phase_SE = grid.get_neighbor_phase(x, y, DIRECTION::SE);
-        if ((phase_NW != phase_N) || (phase_NE != phase_N) || (phase_SW != phase_S) || (phase_SE != phase_S))
+        // Cell must be at a flat boundary, and not be the only cell separating two boundaries
+        bool above = boundary_above(event[0], grid);
+        bool below = boundary_below(event[0], grid);
+        if (!(above ^ below))
         {
             return false;
         }
     }
+    // TODO
     if (event.size() == 1)
     {
-        int x = event[0].first;
-        int y = event[0].second;
-        bool phase = grid.get_cell_phase(x, y);
-        bool phase_W = grid.get_neighbor_phase(x, y, DIRECTION::W);
-        bool phase_E = grid.get_neighbor_phase(x, y, DIRECTION::E);
+        bool phase = grid.get_cell_phase(event[0]);
+        bool phase_W = grid.get_neighbor_phase(event[0], DIRECTION::W);
+        bool phase_E = grid.get_neighbor_phase(event[0], DIRECTION::E);
         if (phase_W == phase_E)
         {
             if (phase != phase_W)
@@ -147,73 +121,41 @@ double EventRateCalculator::calculate_barrier(const Event& event, const Simulati
     }
 }
 
-//// TODO break up into smaller functions
-// double EventRateCalculator::calculate_total_repulsion_energy_change(const Event& event) const
-//{
-//    double energy_change = 0;
-//    for (auto& indices : event)
-//    {
-//        if (boundary_type == BOUNDARY_TYPE::MINUS)
-//        {
-//            int x = indices.first;
-//            int y = indices.second;
-//            energy_change += calculate_repulsion_energy_change(x, y);
-//        }
-//    }
-//    return energy_change;
-//}
-//
-//// TODO: Change to nearest-neighbor boundary only
-// double EventRateCalculator::calculate_repulsion_energy_change(int x, int y) const
-//{
-//    double energy_change = 0;
-//    int phase = grid.get_cell_phase(x, y);
-//    bool boundary_below = phase != grid.get_cell_phase(x, y - 1);
-//    // TODO assert site is at boundary
-//
-//    bool found_boundary_same = false;
-//    bool found_boundary_opposite = false;
-//    int d_same = 100;
-//    int d_opposite = 100;
-//
-//    int max_dy = 5;
-//    for (int i = 0; i < 2; i++)
-//    {
-//        for (int dy = 1; dy <= max_dy; dy++)
-//        {
-//            int x_look = (i == 0 ? (x - 1 * (y % 2) * (dy % 2)) : (x + 1 * ((y + 1) % 2) * (dy % 2)));
-//
-//            if (found_boundary_same && found_boundary_opposite)
-//            {
-//                break;
-//            }
-//            if (!found_boundary_same)
-//            {
-//                if ((boundary_below && (phase != grid.get_cell_phase(x_look, y + dy))) ||
-//                    (!boundary_below && (phase != grid.get_cell_phase(x_look, y - dy))))
-//                {
-//                    found_boundary_same = true;
-//                    d_same = dy;
-//                }
-//            }
-//            if (!found_boundary_opposite)
-//            {
-//                if ((boundary_below && (phase == grid.get_cell_phase(x_look, y - dy))) ||
-//                    (!boundary_below && (phase == grid.get_cell_phase(x_look, y + dy))))
-//                {
-//                    found_boundary_opposite = true;
-//                    d_opposite = dy - 1;
-//                }
-//            }
-//        }
-//        double current_energy = 0.5 * (zeta_minus_boundary_energy(d_same) + zeta_minus_boundary_energy(d_opposite));
-//        double new_energy = 0.5 * (zeta_minus_boundary_energy(d_same - 1) + zeta_minus_boundary_energy(d_opposite +
-//        1)); energy_change += new_energy - current_energy;
-//        //            std::cout << d_same << ", " << d_opposite << ", " << new_energy - current_energy <<
-//        //            std::endl;
-//    }
-//    return energy_change;
-//}
+bool EventRateCalculator::boundary_above(const std::pair<int, int>& coordinates, const SimulationCellGrid& grid) const
+{
+    bool phase = grid.get_cell_phase(coordinates);
+    if (boundary_type == BOUNDARY_TYPE::MINUS)
+    {
+        bool phase_NW = grid.get_neighbor_phase(coordinates, DIRECTION::NW);
+        bool phase_NE = grid.get_neighbor_phase(coordinates, DIRECTION::NE);
+        return ((phase_NW == phase_NE) && (phase != phase_NW));
+    }
+    else
+    {
+        bool phase_N = grid.get_neighbor_phase(coordinates, DIRECTION::N);
+        bool phase_NW = grid.get_neighbor_phase(coordinates, DIRECTION::NW);
+        bool phase_NE = grid.get_neighbor_phase(coordinates, DIRECTION::NE);
+        return ((phase_N == phase_NW) && (phase_N == phase_NE) && (phase != phase_N));
+    }
+}
+
+bool EventRateCalculator::boundary_below(const std::pair<int, int>& coordinates, const SimulationCellGrid& grid) const
+{
+    bool phase = grid.get_cell_phase(coordinates);
+    if (boundary_type == BOUNDARY_TYPE::MINUS)
+    {
+        bool phase_SW = grid.get_neighbor_phase(coordinates, DIRECTION::SW);
+        bool phase_SE = grid.get_neighbor_phase(coordinates, DIRECTION::SE);
+        return ((phase_SW == phase_SE) && (phase != phase_SW));
+    }
+    else
+    {
+        bool phase_S = grid.get_neighbor_phase(coordinates, DIRECTION::S);
+        bool phase_SW = grid.get_neighbor_phase(coordinates, DIRECTION::SW);
+        bool phase_SE = grid.get_neighbor_phase(coordinates, DIRECTION::SE);
+        return ((phase_S == phase_SW) && (phase_S == phase_SE) && (phase != phase_S));
+    }
+}
 
 SUBLATTICE EventRateCalculator::get_sublattice_of_cell(int x, int y, const SimulationCellGrid& grid)
 {

@@ -1,6 +1,6 @@
 CXX = clang++
 CXXFLAGS = -std=c++11 -O3
-OBJS = apb-kmc.o grid.o simulation.o wrapper.o
+OBJS = apb-kmc.o grid.o calculator.o simulation.o wrapper.o
 
 apb-kmc: $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@

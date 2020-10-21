@@ -66,6 +66,11 @@ SimulationCellGrid::SimulationCellGrid(int width, const std::vector<int>& block_
 
 bool SimulationCellGrid::get_cell_phase(int x, int y) const { return phase_grid[modulo(x, width)][modulo(y, height)]; }
 
+bool SimulationCellGrid::get_cell_phase(const std::pair<int, int>& coordinates) const
+{
+    return get_cell_phase(coordinates.first, coordinates.second);
+}
+
 std::pair<int, int> SimulationCellGrid::get_neighbor_indices(int x, int y, DIRECTION neighbor_direction) const
 {
     // Check that direction is valid

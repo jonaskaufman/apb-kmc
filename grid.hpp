@@ -53,6 +53,7 @@ public:
 
     /// Returns the phase of the cell at (x, y)
     bool get_cell_phase(int x, int y) const;
+    bool get_cell_phase(const std::pair<int, int>& coordinates) const;
 
     /// Returns the coordinates of the given neighbor of the cell at (x, y)
     std::pair<int, int> get_neighbor_indices(int x, int y, DIRECTION neighbor_direction) const;

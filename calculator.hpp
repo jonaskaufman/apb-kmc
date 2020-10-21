@@ -64,6 +64,10 @@ private:
     ///
     double calculate_barrier_zeta_plus(const Event& event, const SimulationCellGrid& grid) const;
 
+    bool boundary_above(const std::pair<int, int>& coordinates, const SimulationCellGrid& grid) const;
+
+    bool boundary_below(const std::pair<int, int>& coordinates, const SimulationCellGrid& grid) const;
+
     /// Returns the sublattice (A or B) of the atom in given cell based on boundary type and phase
     SUBLATTICE get_sublattice_of_cell(int x, int y, const SimulationCellGrid& grid);
 

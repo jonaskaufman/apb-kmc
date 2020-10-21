@@ -17,17 +17,16 @@
 #define ZETA_MINUS_REPULSION 0.0543
 
 // TODO does this need to be a function?
-double zeta_minus_boundary_energy(const int& spacing)
-{
-    switch (spacing)
-    {
-    case 1:
-        return 0.0543;
-    default:
-        return 0;
-    }
-};
-
+// double zeta_minus_boundary_energy(const int& spacing)
+//{
+//    switch (spacing)
+//    {
+//    case 1:
+//        return 0.0543;
+//    default:
+//        return 0;
+//    }
+//};
 
 /**
  * Calculator of event rates in kinetic Monte Carlo simulation
@@ -55,6 +54,12 @@ private:
     ///
     bool is_valid_event_zeta_plus(const Event& event, const SimulationCellGrid& grid) const;
 
+    ///
+    bool at_valid_boundary(const std::pair<int, int>& coordinates, const SimulationCellGrid& grid) const;
+
+    ///
+    bool passes_additional_checks_zeta_plus(const Event& event, const SimulationCellGrid& grid) const;
+
     /// Returns the kinetic barrier for an event
     double calculate_barrier(const Event& event, const SimulationCellGrid& grid) const;
 
@@ -63,10 +68,6 @@ private:
 
     ///
     double calculate_barrier_zeta_plus(const Event& event, const SimulationCellGrid& grid) const;
-
-    bool boundary_above(const std::pair<int, int>& coordinates, const SimulationCellGrid& grid) const;
-
-    bool boundary_below(const std::pair<int, int>& coordinates, const SimulationCellGrid& grid) const;
 
     /// Returns the sublattice (A or B) of the atom in given cell based on boundary type and phase
     SUBLATTICE get_sublattice_of_cell(int x, int y, const SimulationCellGrid& grid);

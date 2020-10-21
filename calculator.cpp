@@ -1,5 +1,6 @@
 #include "calculator.hpp"
 #include <cmath>
+#include <stdexcept>
 
 inline double boltzmann_factor(double barrier, double temperature) { return std::exp(-barrier / (KB * temperature)); }
 
@@ -12,7 +13,7 @@ double EventRateCalculator::calculate_rate(const Event& event, const SimulationC
 {
     if (!is_valid_event(event, grid))
     {
-        return 0;
+        return 0.0;
     }
     else
     {
@@ -35,76 +36,102 @@ bool EventRateCalculator::is_valid_event(const Event& event, const SimulationCel
 
 bool EventRateCalculator::is_valid_event_zeta_minus(const Event& event, const SimulationCellGrid& grid) const
 {
-    // Only single atom/cell events are allowed
+    // Only single cell events are allowed
     if (event.size() != 1)
     {
         return false;
     }
-    // Cell must be at a flat boundary, and not be the only cell separating two boundaries
-    bool above = boundary_above(event[0], grid);
-    bool below = boundary_below(event[0], grid);
-    return (above ^ below);
+    // Cell must be at a flat boundary and not be the only cell separating two boundaries
+    return at_valid_boundary(event[0], grid);
 }
 
 bool EventRateCalculator::is_valid_event_zeta_plus(const Event& event, const SimulationCellGrid& grid) const
 {
-    // Only single or double atom/cell events are allowed
+    // Only single or double cell events are allowed
     if ((event.size() != 1) && (event.size() != 2))
     {
         return false;
     }
+    // Cell(s) must be at a flat boundary and not be the only cell separating two boundaries
     for (const auto& coordinates : event)
     {
-        // Cell must be at a flat boundary, and not be the only cell separating two boundaries
-        bool above = boundary_above(event[0], grid);
-        bool below = boundary_below(event[0], grid);
-        if (!(above ^ below))
+        if (!at_valid_boundary(coordinates, grid))
         {
             return false;
         }
     }
-    // TODO
+    // Additional checks, mostly ensuring no single cell kinks are introduced
+    if (!passes_additional_checks_zeta_plus(event, grid))
+    {
+        return false;
+    }
+    return true;
+}
+
+bool EventRateCalculator::passes_additional_checks_zeta_plus(const Event& event, const SimulationCellGrid& grid) const
+{
     if (event.size() == 1)
     {
         bool phase = grid.get_cell_phase(event[0]);
         bool phase_W = grid.get_neighbor_phase(event[0], DIRECTION::W);
         bool phase_E = grid.get_neighbor_phase(event[0], DIRECTION::E);
+        // Neighbors must be opposite phase from each other
         if (phase_W == phase_E)
         {
+            // No single cell kinks should ever be present
             if (phase != phase_W)
             {
-                throw std::runtime_error("Single atom kink detected for zeta plus, which is not allowed.");
+                throw std::runtime_error("Single atom kink detected in a zeta plus boundary, which is not allowed");
             }
             return false;
         }
-        // TODO check about single kink formation
-    }
-    else
-    {
-        // Cells must have the same phase
-        int x_0 = event[0].first;
-        int x_1 = event[1].first;
-        int y_0 = event[0].second;
-        int y_1 = event[1].second;
-        if ((y_0 != y_1) || (x_1 != modulo(x_0 + 1, grid.width)))
+        // No single cell kinks should be created
+        else
         {
-            throw std::runtime_error("Cells for double atom event are not adjacent, or in wrong order.");
+            bool phase_X = (phase == phase_W) ? phase_W : phase_E;
+            DIRECTION direction_X = (phase == phase_W) ? DIRECTION::W : DIRECTION::E;
+            bool phase_X_X = grid.get_neighbor_phase(grid.get_neighbor_indices(event[0], direction_X), direction_X);
+            if (phase_X_X != phase_X)
+            {
+                return false;
+            }
         }
-        int y = y_0;
-        bool phase_0 = grid.get_cell_phase(x_0, y);
-        bool phase_1 = grid.get_cell_phase(x_1, y);
+    }
+    else if (event.size() == 2)
+    {
+        // Event cells must be in expected order
+        if (grid.get_neighbor_indices(event[0], DIRECTION::W) != event[1])
+        {
+            throw std::runtime_error("Cells for double atom event are in wrong order or not horizontally adjacent.");
+        }
+        bool phase_0 = grid.get_cell_phase(event[0]);
+        bool phase_1 = grid.get_cell_phase(event[1]);
+        // Event cells must have same phase
         if (phase_0 != phase_1)
         {
             return false;
         }
-        bool phase_W_0 = grid.get_neighbor_phase(x_0, y, DIRECTION::W);
-        bool phase_E_1 = grid.get_neighbor_phase(x_1, y, DIRECTION::E);
-        if (phase_W_0 != phase_E_1)
+        // Neighbors must have same phase
+        bool phase_0_W = grid.get_neighbor_phase(event[0], DIRECTION::W);
+        bool phase_1_E = grid.get_neighbor_phase(event[1], DIRECTION::E);
+        if (phase_0_W != phase_1_E)
         {
             return false;
         }
-        bool phase_W_W_0 = grid.get_neighbor_phase(grid.get_neighbor_indices(x_0, y, DIRECTION::W), DIRECTION::W);
-        bool phase_E_E_1 = grid.get_neighbor_phase(grid.get_neighbor_indices(x_1, y, DIRECTION::E), DIRECTION::E);
+        // No single cell kinks should be created
+        if (phase_0 == phase_0_W)
+        {
+            bool phase_0_W_W = grid.get_neighbor_phase(grid.get_neighbor_indices(event[0], DIRECTION::W), DIRECTION::W);
+            bool phase_1_E_E = grid.get_neighbor_phase(grid.get_neighbor_indices(event[1], DIRECTION::E), DIRECTION::E);
+            if ((phase_0_W_W != phase_0_W) || (phase_1_E_E != phase_1_E))
+            {
+                return false;
+            }
+        }
+    }
+    else
+    {
+        return false;
     }
     return true;
 }
@@ -121,39 +148,38 @@ double EventRateCalculator::calculate_barrier(const Event& event, const Simulati
     }
 }
 
-bool EventRateCalculator::boundary_above(const std::pair<int, int>& coordinates, const SimulationCellGrid& grid) const
+double EventRateCalculator::calculate_barrier_zeta_minus(const Event& event, const SimulationCellGrid& grid) const
 {
-    bool phase = grid.get_cell_phase(coordinates);
+    return ZETA_MINUS_BARRIER;
+}
+
+double EventRateCalculator::calculate_barrier_zeta_plus(const Event& event, const SimulationCellGrid& grid) const
+{
+    return 100000000000000;
+}
+
+bool EventRateCalculator::at_valid_boundary(const std::pair<int, int>& coordinates,
+                                            const SimulationCellGrid& grid) const
+
+{
     if (boundary_type == BOUNDARY_TYPE::MINUS)
     {
         bool phase_NW = grid.get_neighbor_phase(coordinates, DIRECTION::NW);
         bool phase_NE = grid.get_neighbor_phase(coordinates, DIRECTION::NE);
-        return ((phase_NW == phase_NE) && (phase != phase_NW));
+        bool phase_SW = grid.get_neighbor_phase(coordinates, DIRECTION::SW);
+        bool phase_SE = grid.get_neighbor_phase(coordinates, DIRECTION::SE);
+        return ((phase_NW == phase_NE) && (phase_SW == phase_SE) && (phase_NW != phase_SW));
     }
     else
     {
         bool phase_N = grid.get_neighbor_phase(coordinates, DIRECTION::N);
         bool phase_NW = grid.get_neighbor_phase(coordinates, DIRECTION::NW);
         bool phase_NE = grid.get_neighbor_phase(coordinates, DIRECTION::NE);
-        return ((phase_N == phase_NW) && (phase_N == phase_NE) && (phase != phase_N));
-    }
-}
-
-bool EventRateCalculator::boundary_below(const std::pair<int, int>& coordinates, const SimulationCellGrid& grid) const
-{
-    bool phase = grid.get_cell_phase(coordinates);
-    if (boundary_type == BOUNDARY_TYPE::MINUS)
-    {
-        bool phase_SW = grid.get_neighbor_phase(coordinates, DIRECTION::SW);
-        bool phase_SE = grid.get_neighbor_phase(coordinates, DIRECTION::SE);
-        return ((phase_SW == phase_SE) && (phase != phase_SW));
-    }
-    else
-    {
         bool phase_S = grid.get_neighbor_phase(coordinates, DIRECTION::S);
         bool phase_SW = grid.get_neighbor_phase(coordinates, DIRECTION::SW);
         bool phase_SE = grid.get_neighbor_phase(coordinates, DIRECTION::SE);
-        return ((phase_S == phase_SW) && (phase_S == phase_SE) && (phase != phase_S));
+        return ((phase_N == phase_NE) && (phase_N == phase_NW) && (phase_S == phase_SW) && (phase_S == phase_SE) &&
+                (phase_N != phase_S));
     }
 }
 

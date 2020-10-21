@@ -16,7 +16,11 @@ int RandomGenerator::sample_integer_range(int maximum_value)
 double RandomGenerator::sample_unit_interval() { return std::uniform_real_distribution<double>(0.0, 1.0)(generator); }
 
 Simulation::Simulation(BOUNDARY_TYPE boundary_type, const SimulationCellGrid& initial_grid, double temperature)
-    : boundary_type{boundary_type}, grid{initial_grid}, time{0}, temperature{temperature}, rate_calculator{boundary_type, temperature}
+    : boundary_type{boundary_type},
+      grid{initial_grid},
+      time{0},
+      temperature{temperature},
+      rate_calculator{boundary_type, temperature}
 {
     // Check if grid is compatible with boundary type
     bool correct_staggered = (boundary_type == BOUNDARY_TYPE::MINUS);
@@ -138,8 +142,4 @@ void Simulation::populate_event_list()
     }
 }
 
-double Simulation::calculate_rate(const Event& event) const
-{
-    // TODO use RateCalculator
-    return 0.0;
-}
+double Simulation::calculate_rate(const Event& event) const { return rate_calculator.calculate_rate(event, grid); }

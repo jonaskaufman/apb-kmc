@@ -7,26 +7,22 @@
 /// Boltzmann constant, in eV/K
 #define KB 8.617333262145e-5
 
-/// Barrier for hops in zeta minus ordering, in eV
-//  TODO this is average, add in actual barriers
-#define ZETA_MINUS_BARRIER 0.03
+/// Hop barriers in eV
+#define MINUS_KINK_FORM 0.0297
+#define MINUS_KINK_MOVE 0.0327
+#define PLUS_KINK_FORM_I 0.2766
+#define PLUS_KINK_DESTROY_I 0.0563
+#define PLUS_KINK_FORM_II 0.2342
+#define PLUS_KINK_DESTROY_II 0.0139
+#define PLUS_KINK_MOVE_I 0.0415
+#define PLUS_KINK_MOVE_II 0.0532
+#define PLUS_KINK_MOVE_III 0.0152
+#define PLUS_KINK_MOVE_IV 0.1008
 
-#define ZETA_MINUS_KINK_FORM 0.0297
-#define ZETA_MINUS_KINK_MOVE_I 0.0324
-#define ZETA_MINUS_KINK_MOVE_II 0.0331
-#define ZETA_MINUS_REPULSION 0.0543
-
-// TODO does this need to be a function?
-// double zeta_minus_boundary_energy(const int& spacing)
-//{
-//    switch (spacing)
-//    {
-//    case 1:
-//        return 0.0543;
-//    default:
-//        return 0;
-//    }
-//};
+/// Nearest neighbor boundary repulsion energy in eV / boundary length unit
+#define MINUS_REPULSION 0.0543
+// TODO add repulsion!
+#define PLUS_REPULSION 0.0
 
 /**
  * Calculator of event rates in kinetic Monte Carlo simulation
@@ -70,7 +66,7 @@ private:
     double calculate_barrier_zeta_plus(const Event& event, const SimulationCellGrid& grid) const;
 
     /// Returns the sublattice (A or B) of the atom in given cell based on boundary type and phase
-    SUBLATTICE get_sublattice_of_cell(int x, int y, const SimulationCellGrid& grid);
+    SUBLATTICE get_sublattice_of_cell(const std::pair<int, int>& coordinates, const SimulationCellGrid& grid) const;
 
     /// Returns the total boundary repulsion energy change for an event
     double calculate_total_repulsion_energy_change(const Event& event, const SimulationCellGrid& grid) const;

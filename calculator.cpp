@@ -100,7 +100,7 @@ bool EventRateCalculator::passes_additional_checks_zeta_plus(const Event& event,
     else if (event.size() == 2)
     {
         // Event cells must be in expected order
-        if (grid.get_neighbor_indices(event[0], DIRECTION::W) != event[1])
+        if (grid.get_neighbor_indices(event[0], DIRECTION::E) != event[1])
         {
             throw std::runtime_error("Cells for double atom event are in wrong order or not horizontally adjacent.");
         }
@@ -150,12 +150,48 @@ double EventRateCalculator::calculate_barrier(const Event& event, const Simulati
 
 double EventRateCalculator::calculate_barrier_zeta_minus(const Event& event, const SimulationCellGrid& grid) const
 {
-    return ZETA_MINUS_BARRIER;
+    bool phase_W = grid.get_neighbor_phase(event[0], DIRECTION::W);
+    bool phase_E = grid.get_neighbor_phase(event[0], DIRECTION::E);
+    if (phase_W == phase_E)
+    {
+        return MINUS_KINK_FORM;
+    }
+    else
+    {
+        return MINUS_KINK_MOVE;
+    }
 }
 
 double EventRateCalculator::calculate_barrier_zeta_plus(const Event& event, const SimulationCellGrid& grid) const
 {
-    return 100000000000000;
+    if (event.size() == 2)
+    {
+        bool phase = grid.get_cell_phase(event[0]);
+        bool phase_sides = grid.get_neighbor_phase(event[0], DIRECTION::W);
+        SUBLATTICE sublattice_0 = get_sublattice_of_cell(event[0], grid);
+        if (phase == phase_sides)
+        {
+            return ((sublattice_0 == SUBLATTICE::B) ? PLUS_KINK_FORM_I : PLUS_KINK_FORM_II);
+        }
+        else
+        {
+            return ((sublattice_0 == SUBLATTICE::A) ? PLUS_KINK_DESTROY_I : PLUS_KINK_DESTROY_II);
+        }
+    }
+    else
+    {
+        bool phase_S = grid.get_neighbor_phase(event[0], DIRECTION::S);
+        bool phase_E = grid.get_neighbor_phase(event[0], DIRECTION::E);
+        SUBLATTICE sublattice_E = get_sublattice_of_cell(grid.get_neighbor_indices(event[0], DIRECTION::E), grid);
+        if (phase_S == phase_E)
+        {
+            return ((sublattice_E == SUBLATTICE::A) ? PLUS_KINK_MOVE_I : PLUS_KINK_MOVE_II);
+        }
+        else
+        {
+            return ((sublattice_E == SUBLATTICE::A) ? PLUS_KINK_MOVE_III : PLUS_KINK_MOVE_IV);
+        }
+    }
 }
 
 bool EventRateCalculator::at_valid_boundary(const std::pair<int, int>& coordinates,
@@ -183,8 +219,11 @@ bool EventRateCalculator::at_valid_boundary(const std::pair<int, int>& coordinat
     }
 }
 
-SUBLATTICE EventRateCalculator::get_sublattice_of_cell(int x, int y, const SimulationCellGrid& grid)
+SUBLATTICE EventRateCalculator::get_sublattice_of_cell(const std::pair<int, int>& coordinates,
+                                                       const SimulationCellGrid& grid) const
 {
+    int x = coordinates.first;
+    int y = coordinates.second;
     bool phase = grid.get_cell_phase(x, y);
     bool even;
     if (boundary_type == BOUNDARY_TYPE::MINUS)

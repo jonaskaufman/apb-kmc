@@ -22,10 +22,12 @@ std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& bounda
         std::cerr << "Amplitude too large!" << std::endl;
         return std::vector<int>();
     }
-    int n_boundaries = std::round((double)target_height / spacing_average);
-    if (n_boundaries %2 != 0)
+
+    double spacing_average_adjusted = spacing_average + ((boundary_type == BOUNDARY_TYPE::MINUS) ? 0.5 : -0.25);
+    int n_boundaries = std::round((double)target_height / spacing_average_adjusted);
+    if (n_boundaries % 2 != 0)
     {
-        n_boundaries += 1;  
+        n_boundaries += 1;
     }
     int height = std::round(n_boundaries * spacing_average);
     std::vector<double> raw_spacings(n_boundaries, -1);
@@ -43,9 +45,9 @@ std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& bounda
         spacings[i] = std::round(spacing_scaling * raw_spacings[i]);
     }
     height = std::accumulate(spacings.begin(), spacings.end(), 0);
-    if (height %2 != 0)
+    if (height % 2 != 0)
     {
-        spacings[0] += 1; 
+        spacings[0] += 1;
     }
     return spacings;
 }
@@ -58,7 +60,7 @@ double average_spacing_from_composition(const BOUNDARY_TYPE& boundary_type, cons
     }
     else
     {
-        return (composition / (2 * composition - 1));
+        return (composition / (4 * composition - 2));
     }
 }
 
@@ -95,7 +97,7 @@ void SimulationWrapper::perform_single(const int& total_passes,
         }
         simulation.pass();
     }
-        std::cout << "Done. Results files written." << std::endl;
+    std::cout << "Done. Results files written." << std::endl;
 }
 
 void SimulationWrapper::perform_set(const int& total_simulations,
@@ -104,7 +106,8 @@ void SimulationWrapper::perform_set(const int& total_simulations,
                                     std::ofstream& composition_profile_file_stream)
 {
     std::vector<double> times;
-    std::vector<std::vector<std::vector<double>>> average_compositions(total_simulations, std::vector<std::vector<double>>());
+    std::vector<std::vector<std::vector<double>>> average_compositions(total_simulations,
+                                                                       std::vector<std::vector<double>>());
     for (int k = 0; k < total_simulations; k++)
     {
         std::cout << "Running simulation " << k << "..." << std::endl;

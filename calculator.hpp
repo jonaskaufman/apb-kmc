@@ -21,8 +21,7 @@
 
 /// Nearest neighbor boundary repulsion energy in eV / boundary length unit
 #define MINUS_REPULSION 0.0543
-// TODO add repulsion!
-#define PLUS_REPULSION 0.0
+#define PLUS_REPULSION 0.0504
 
 /**
  * Calculator of event rates in kinetic Monte Carlo simulation
@@ -60,19 +59,17 @@ private:
     double calculate_barrier(const Event& event, const SimulationCellGrid& grid) const;
 
     ///
-    double calculate_barrier_zeta_minus(const Event& event, const SimulationCellGrid& grid) const;
+    double calculate_base_barrier_zeta_minus(const Event& event, const SimulationCellGrid& grid) const;
 
     ///
-    double calculate_barrier_zeta_plus(const Event& event, const SimulationCellGrid& grid) const;
+    double calculate_base_barrier_zeta_plus(const Event& event, const SimulationCellGrid& grid) const;
 
     /// Returns the sublattice (A or B) of the atom in given cell based on boundary type and phase
     SUBLATTICE get_sublattice_of_cell(const std::pair<int, int>& coordinates, const SimulationCellGrid& grid) const;
 
     /// Returns the total boundary repulsion energy change for an event
-    double calculate_total_repulsion_energy_change(const Event& event, const SimulationCellGrid& grid) const;
+    double calculate_repulsion_energy_change(const Event& event, const SimulationCellGrid& grid) const;
 
-    /// Returns the boundary repulsion energy change for a single cell flip
-    double calculate_repulsion_energy_change(int x, int y, const SimulationCellGrid& grid) const;
 };
 
 #endif

@@ -51,10 +51,9 @@ file_name = sys.argv[1]
 times, horizontal_values = parse_horizontal_results(file_name)
 n_simulations = len(horizontal_values[0])
 height = len(horizontal_values[0][0])
-true_height = height/2
+true_height = height/4
 
-sigma = 20
-boundary_type = '-'
+sigma = 40
 smoothing_matrix = periodic_gaussian_matrix(height, sigma)
 
 colors = cm.plasma(np.linspace(0, 1, len(times)))
@@ -75,7 +74,7 @@ for t in range(len(times)):
     profiles = np.array(profiles)
     average_composition_profiles.append(np.mean(profiles, axis=0))
     plt.plot(average_composition_profiles[t], color=colors[t])
-plt.ylim(0.4, 0.5)
+#plt.ylim(0.4, 0.5)
 plt.xlabel('position')
 plt.ylabel('composition')
 plt.show()

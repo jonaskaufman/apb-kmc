@@ -39,11 +39,14 @@ void Simulation::step()
     {
         throw std::runtime_error("Rate is invalid.");
     }
-    if (rate > random_generator.sample_unit_interval())
+    if (rate != 0.0)
     {
-        for (auto& indices : candidate_event)
+        if (rate > random_generator.sample_unit_interval())
         {
-            grid.flip_cell_phase(indices.first, indices.second);
+            for (auto& indices : candidate_event)
+            {
+                grid.flip_cell_phase(indices.first, indices.second);
+            }
         }
     }
     double time_step = std::log(1.0 / random_generator.sample_unit_interval()) / event_list.size();

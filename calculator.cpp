@@ -138,17 +138,19 @@ bool EventRateCalculator::passes_additional_checks_zeta_plus(const Event& event,
 
 double EventRateCalculator::calculate_barrier(const Event& event, const SimulationCellGrid& grid) const
 {
-    if (boundary_type == BOUNDARY_TYPE::MINUS)
+    double base_barrier = (boundary_type == BOUNDARY_TYPE::MINUS) ? calculate_base_barrier_zeta_minus(event, grid)
+                                                                  : calculate_base_barrier_zeta_plus(event, grid);
+    //double barrier_adjustment = calculate_repulsion_energy_change(event, grid) / 2;
+    double barrier_adjustment = 0.0;
+    double barrier = base_barrier + barrier_adjustment;
+    if (barrier < 0.0)
     {
-        return calculate_barrier_zeta_minus(event, grid);
+        throw std::runtime_error("Barrier is negative.");
     }
-    else
-    {
-        return calculate_barrier_zeta_plus(event, grid);
-    }
+    return barrier;
 }
 
-double EventRateCalculator::calculate_barrier_zeta_minus(const Event& event, const SimulationCellGrid& grid) const
+double EventRateCalculator::calculate_base_barrier_zeta_minus(const Event& event, const SimulationCellGrid& grid) const
 {
     bool phase_W = grid.get_neighbor_phase(event[0], DIRECTION::W);
     bool phase_E = grid.get_neighbor_phase(event[0], DIRECTION::E);
@@ -162,7 +164,7 @@ double EventRateCalculator::calculate_barrier_zeta_minus(const Event& event, con
     }
 }
 
-double EventRateCalculator::calculate_barrier_zeta_plus(const Event& event, const SimulationCellGrid& grid) const
+double EventRateCalculator::calculate_base_barrier_zeta_plus(const Event& event, const SimulationCellGrid& grid) const
 {
     if (event.size() == 2)
     {
@@ -244,3 +246,30 @@ SUBLATTICE EventRateCalculator::get_sublattice_of_cell(const std::pair<int, int>
     }
 }
 
+double EventRateCalculator::calculate_repulsion_energy_change(const Event& event, const SimulationCellGrid& grid) const
+{
+    bool minus = (boundary_type == BOUNDARY_TYPE::MINUS);
+    double repulsion_energy = (minus ? MINUS_REPULSION : PLUS_REPULSION);
+    double energy_change = 0.0;
+    for (const auto& coordinates : event)
+    {
+        bool phase = grid.get_cell_phase(coordinates);
+        bool phase_below = (minus ? grid.get_neighbor_phase(coordinates, DIRECTION::SW)
+                                  : grid.get_neighbor_phase(coordinates, DIRECTION::S));
+        bool boundary_below = (phase != phase_below);
+        bool phase_above_2 = grid.get_cell_phase(coordinates.first, coordinates.second + 2);
+        bool phase_below_2 = grid.get_cell_phase(coordinates.first, coordinates.second - 2);
+        bool phase_closer_to_boundary = (boundary_below ? phase_below_2 : phase_above_2);
+        bool phase_further_from_boundary = (boundary_below ? phase_above_2 : phase_below_2);
+
+        if (phase_further_from_boundary != phase)
+        {
+            energy_change += repulsion_energy;
+        }
+        if (phase_closer_to_boundary == phase)
+        {
+            energy_change -= repulsion_energy;
+        }
+    }
+    return energy_change;
+}

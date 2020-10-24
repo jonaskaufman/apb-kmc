@@ -40,9 +40,11 @@ int main(int argc, char* argv[])
     }
     std::cout << std::endl;
     int height = std::accumulate(initial_spacings.begin(), initial_spacings.end(), 0);
-    double spacing_average = (double)height / (double)initial_spacings.size();
+    int n_boundaries = initial_spacings.size(); 
+    double spacing_average = (double)height / (double)n_boundaries;
     double target_spacing_average = average_spacing_from_composition(boundary_type, composition_average);
-    std::cout << "Height is " << height << " units (target " << target_height << ")" << std::endl;
+    double actual_height = height + ((boundary_type == BOUNDARY_TYPE::MINUS) ? 0.5 : -0.25)*n_boundaries;
+    std::cout << "Height is " << actual_height << " units (target " << target_height << ")" << std::endl;
     std::cout << "Average spacing is " << spacing_average << " units (target " << target_spacing_average << ")"
               << std::endl;
 

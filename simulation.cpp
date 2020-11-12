@@ -65,11 +65,29 @@ void Simulation::pass()
     }
 }
 
-PixelGrid Simulation::get_phase_pixel_grid() const { return grid.get_phase_pixel_grid(); }
+PixelGrid Simulation::get_phase_pixel_grid() const
+{
+    const PixelGrid phase_grid = grid.get_phase_pixel_grid();
+    int width = phase_grid.size();
+    int height = phase_grid[0].size();
+    int scaled_height = 4 * height;
+    PixelGrid scaled_phase_grid(width, std::vector<double>(scaled_height, 0));
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            for (int dy = 0; dy < 4; dy++)
+            {
+                scaled_phase_grid[x][4 * y + dy] = phase_grid[x][y];
+            }
+        }
+    }
+    return scaled_phase_grid;
+}
 
 PixelGrid Simulation::get_composition_pixel_grid() const
 {
-    const PixelGrid phase_grid = get_phase_pixel_grid();
+    const PixelGrid phase_grid = grid.get_phase_pixel_grid();
     int width = phase_grid.size();
     int phase_grid_height = phase_grid[0].size();
     // Find the y coordinate of each boundary at x = 0

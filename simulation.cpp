@@ -16,14 +16,14 @@ int RandomGenerator::sample_integer_range(int maximum_value)
 double RandomGenerator::sample_unit_interval() { return std::uniform_real_distribution<double>(0.0, 1.0)(generator); }
 
 Simulation::Simulation(BOUNDARY_TYPE boundary_type, const SimulationCellGrid& initial_grid, double temperature)
-    : boundary_type{boundary_type},
+    : boundary_minus{boundary_type == BOUNDARY_TYPE::MINUS},
       grid{initial_grid},
       time{0},
       temperature{temperature},
       rate_calculator{boundary_type, temperature}
 {
     // Check if grid is compatible with boundary type
-    bool correct_staggered = (boundary_type == BOUNDARY_TYPE::MINUS);
+    bool correct_staggered = boundary_minus;
     if (grid.staggered != correct_staggered)
     {
         throw std::runtime_error("Boundary type not compatible with grid.");
@@ -104,18 +104,17 @@ PixelGrid Simulation::get_composition_pixel_grid() const
 
     // zeta plus currently wrong!
     int n_boundaries = boundary_y_origins.size();
-    bool minus = (boundary_type == BOUNDARY_TYPE::MINUS);
     int composition_grid_height =
-        (minus ? (4 * phase_grid_height + 2 * n_boundaries) : (4 * phase_grid_height - n_boundaries));
+        (boundary_minus ? (4 * phase_grid_height + 2 * n_boundaries) : (4 * phase_grid_height - n_boundaries));
     PixelGrid composition_grid(width, std::vector<double>(composition_grid_height, 0.5));
     // Follow each boundary along the x direction and update composition accordingly
     for (int b = 0; b < n_boundaries; b++)
     {
         int y_phase = boundary_y_origins[b];
-        int y_comp = (minus ? (4 * y_phase + 2 * b) : (4 * y_phase - b));
+        int y_comp = (boundary_minus ? (4 * y_phase + 2 * b) : (4 * y_phase - b));
         for (int x = 0; x < width; x++)
         {
-            if (minus)
+            if (boundary_minus)
             {
                 composition_grid[x][modulo(y_comp, composition_grid_height)] = 0.0;
                 composition_grid[x][modulo(y_comp + 1, composition_grid_height)] = 0.0;
@@ -155,7 +154,7 @@ void Simulation::populate_event_list()
         for (int x = 0; x < grid.width; x++)
         {
             event_list.push_back({std::make_pair(x, y)});
-            if (boundary_type == BOUNDARY_TYPE::PLUS)
+            if (!boundary_minus)
             {
                 event_list.push_back({std::make_pair(x, y), std::make_pair(modulo(x + 1, grid.width), y)});
             }

@@ -1,9 +1,9 @@
 #ifndef SIMULATION_H
 #define SIMULATION_H
 
+#include "calculator.hpp"
 #include "definitions.hpp"
 #include "grid.hpp"
-#include "calculator.hpp"
 #include <fstream>
 #include <iostream>
 #include <random>
@@ -67,8 +67,8 @@ private:
     /// Simulation cell grid to store phase values
     SimulationCellGrid grid;
 
-    /// Type of boundary being simulated
-    const BOUNDARY_TYPE boundary_type;
+    /// Type of boundary being simulated (true for minus, false for plus)
+    const bool boundary_minus;
 
     /// Simulation time, in units of reciprocal vibrational prefactor
     double time;

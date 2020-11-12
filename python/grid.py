@@ -2,6 +2,8 @@ import numpy as np
 
 grid_x_scaling = 2  # width of one simulation cell, in pixels
 grid_y_scaling = 4  # height of one simulation cell, in pixels
+y_sigma = 10        # standard deviation for profile smoothing, in units of simulation cell height
+y_sigma_scaled = grid_y_scaling*y_sigma
 
 
 def gaussian(mu, sigma, x):
@@ -19,3 +21,8 @@ def periodic_gaussian_matrix(dimension, sigma):
             matrix[i, j] += gaussian(0, sigma, w)
     return matrix
 
+
+def periodic_smooth_profiles(profiles, sigma):
+    """ Apply periodic gaussian smoothing to a set of profiles """
+    smoothing_matrix = periodic_gaussian_matrix(len(profiles[0]), sigma)
+    return [smoothing_matrix.dot(p) for p in profiles]

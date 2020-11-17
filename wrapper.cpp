@@ -10,42 +10,65 @@
 std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& boundary_type,
                                                      const double& composition_average,
                                                      const double& composition_amplitude,
-                                                     const int& target_height)
+                                                     const int& target_physical_height)
 {
+    // Convert the desired average and amplitude of composition to boundary spacing values
     double spacing_average = average_spacing_from_composition(boundary_type, composition_average);
     double spacing_amplitude =
         std::abs((average_spacing_from_composition(boundary_type, composition_average + composition_amplitude) -
                   average_spacing_from_composition(boundary_type, composition_average - composition_amplitude))) /
         2;
+    // Make sure boundary spacing will never be too small
     if (spacing_average - spacing_amplitude < 1)
     {
         std::cerr << "Amplitude too large!" << std::endl;
         return std::vector<int>();
     }
 
-    double spacing_average_adjusted = spacing_average + ((boundary_type == BOUNDARY_TYPE::MINUS) ? 0.5 : -0.25);
-    int n_boundaries = std::round((double)target_height / spacing_average_adjusted);
-    if (n_boundaries % 2 != 0)
+    // Accounting for the added physical height of boundaries themselves,
+    // calculate the approximate number of boundaries and total cell height
+    double additional_boundary_height = (boundary_type == BOUNDARY_TYPE::MINUS) ? 0.5 : -0.25;
+    double spacing_average_adjusted = spacing_average + additional_boundary_height; 
+    int n_boundaries = std::round((double)target_physical_height / spacing_average_adjusted);
+    if (n_boundaries % 2 != 0) // Number of boundaries must be even to ensure periodicity
     {
         n_boundaries += 1;
     }
-    int height = std::round(n_boundaries * spacing_average);
+    int cell_height = std::round(n_boundaries * spacing_average);
+    double physical_height = cell_height + additional_boundary_height*n_boundaries; 
+
+    // Obtain raw boundary spacing values by sampling sinusoidal composition profile
     std::vector<double> raw_spacings(n_boundaries, -1);
+    double phase_shift = (boundary_type == BOUNDARY_TYPE::MINUS) ? 0.0 : M_PI;
+    double y_position = 0.0;
     for (int i = 0; i < n_boundaries; i++)
     {
-        double x = 2 * M_PI * (double)i / (double)n_boundaries;
-        double arg_scaling = std::sin(x / 2);
-        raw_spacings[i] = spacing_amplitude * std::cos((x + M_PI * arg_scaling) / (1 + arg_scaling)) + spacing_average;
+        double t = 2 * M_PI * y_position / physical_height;
+         
+        double composition_sample = composition_amplitude*std::cos(t + phase_shift) + composition_average;
+        raw_spacings[i] = average_spacing_from_composition(boundary_type, composition_sample);
+        if (i < n_boundaries/2)
+        {
+            y_position += (raw_spacings[i] + additional_boundary_height);
+        }
+        else
+        {
+            y_position -= (raw_spacings[i] + additional_boundary_height);
+        }
     }
+
+    // Scale the raw spacing values to get closer to the desired cell height
     double raw_spacings_total = std::accumulate(raw_spacings.begin(), raw_spacings.end(), 0.0);
-    double spacing_scaling = (double)height / raw_spacings_total;
+    double spacing_scaling = (double)cell_height / raw_spacings_total;
     std::vector<int> spacings(n_boundaries, -1);
     for (int i = 0; i < n_boundaries; i++)
     {
-        spacings[i] = std::round(spacing_scaling * raw_spacings[i]);
+        spacings[i] = std::round(spacing_scaling * raw_spacings[i]); // Final spacing values must be integers
     }
-    height = std::accumulate(spacings.begin(), spacings.end(), 0);
-    if (height % 2 != 0)
+
+    // Make sure cell height is even to ensure periodicity
+    cell_height = std::accumulate(spacings.begin(), spacings.end(), 0);
+    if (cell_height % 2 != 0)
     {
         spacings[0] += 1;
     }
@@ -62,6 +85,12 @@ double average_spacing_from_composition(const BOUNDARY_TYPE& boundary_type, cons
     {
         return (composition / (4 * composition - 2));
     }
+}
+
+double physical_height(const BOUNDARY_TYPE& boundary_type, const std::vector<int>& boundary_cell_spacings)
+{
+    double cell_height = std::accumulate(boundary_cell_spacings.begin(), boundary_cell_spacings.end(), 0);
+    return cell_height + ((boundary_type == BOUNDARY_TYPE::MINUS) ? 0.5 : -0.25)*boundary_cell_spacings.size(); 
 }
 
 SimulationWrapper::SimulationWrapper(const BOUNDARY_TYPE& boundary_type,

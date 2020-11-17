@@ -57,6 +57,10 @@ def plot_and_report(time, phase_grid, composition_grid, composition_profile, smo
     plt.tight_layout()
     plt.show()
 
+def plot_profile_periodic(profile):
+    tiled_profile = np.tile(profile, 3) 
+    plt.plot(tiled_profile)
+    plt.show()
 
 def main():
     # Parse simulation output
@@ -78,6 +82,9 @@ def main():
     smooth_composition_profiles = periodic_smooth_profiles(
         composition_profiles, y_sigma_scaled)
 
+    # Plot initial profile
+    plot_profile_periodic(smooth_composition_profiles[0])
+    
     # Plot and report for each time step
     for i in range(len(times)):
         plot_and_report(times[i], phase_grids[i], composition_grids[i],

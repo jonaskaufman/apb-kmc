@@ -6,6 +6,7 @@
 #include <fstream>
 #include <numeric>
 #include <vector>
+#include <ctime>
 
 std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& boundary_type,
                                                      const double& composition_average,
@@ -107,6 +108,8 @@ void SimulationWrapper::perform_single(const int& total_passes,
                                        std::ofstream& composition_grid_file_stream,
                                        std::ofstream& composition_profile_file_stream)
 {
+    std::time_t start, end;
+    std::time(&start);
     Simulation simulation = setup();
     std::cout << "Running simulation..." << std::endl;
     for (int n = 0; n < total_passes; n++)
@@ -127,6 +130,9 @@ void SimulationWrapper::perform_single(const int& total_passes,
         simulation.pass();
     }
     std::cout << "Done. Results files written." << std::endl;
+    std::time(&end);
+    double elapsed = double(end - start);
+    std::cout << "Elapsed time: " << elapsed << " seconds" << std::endl;
 }
 
 void SimulationWrapper::perform_set(const int& total_simulations,

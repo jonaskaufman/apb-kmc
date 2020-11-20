@@ -1,5 +1,5 @@
-CXX = clang++
-CXXFLAGS = -std=c++17 -O3
+CXX = g++-9
+CXXFLAGS = -std=c++17 -O3 -DNDEBUG
 OBJS = apb-kmc.o grid.o calculator.o simulation.o wrapper.o
 
 apb-kmc: $(OBJS)

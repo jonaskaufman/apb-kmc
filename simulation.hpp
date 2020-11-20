@@ -79,6 +79,9 @@ private:
     /// List of all possible events that can occur over the course of a simulation
     std::vector<Event> event_list;
 
+    /// Cache to store rates (to avoid recaculation)
+    std::vector<double> rate_cache;
+
     /// Random number generator to be used throughout simulation
     RandomGenerator random_generator;
 
@@ -88,6 +91,9 @@ private:
     /// Populates the event list based on the grid dimensions and boundary type
     // NOTE: for two atom events, they are always listed in L->R order
     void populate_event_list();
+
+    ///
+    void reset_rate_cache();
 
     /// Returns the rate of an event given the current configuration
     double calculate_rate(const Event& event) const;

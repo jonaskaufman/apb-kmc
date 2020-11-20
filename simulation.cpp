@@ -29,12 +29,17 @@ Simulation::Simulation(BOUNDARY_TYPE boundary_type, const SimulationCellGrid& in
         throw std::runtime_error("Boundary type not compatible with grid.");
     }
     populate_event_list();
+    reset_rate_cache();
 }
 
 void Simulation::step()
 {
-    Event candidate_event = event_list[random_generator.sample_integer_range(event_list.size() - 1)];
-    double rate = calculate_rate(candidate_event);
+    int candidate_event_index = random_generator.sample_integer_range(event_list.size() - 1);
+    double rate = rate_cache[candidate_event_index];
+    if (rate == -1.0)
+    {
+        rate = calculate_rate(event_list[candidate_event_index]);
+    }
     if (rate < 0 || rate > 1)
     {
         throw std::runtime_error("Rate is invalid.");
@@ -43,9 +48,10 @@ void Simulation::step()
     {
         if (rate > random_generator.sample_unit_interval())
         {
-            for (auto& indices : candidate_event)
+            for (auto& indices : event_list[candidate_event_index])
             {
                 grid.flip_cell_phase(indices.first, indices.second);
+                reset_rate_cache();
             }
         }
     }
@@ -160,6 +166,11 @@ void Simulation::populate_event_list()
             }
         }
     }
+}
+
+void Simulation::reset_rate_cache()
+{
+    rate_cache = std::vector<double>(event_list.size(), -1.0);
 }
 
 double Simulation::calculate_rate(const Event& event) const { return rate_calculator.calculate_rate(event, grid); }

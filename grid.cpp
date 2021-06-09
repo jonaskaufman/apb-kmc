@@ -66,12 +66,12 @@ SimulationCellGrid::SimulationCellGrid(int width, const std::vector<int>& block_
 
 bool SimulationCellGrid::get_cell_phase(int x, int y) const { return phase_grid[modulo(x, width)][modulo(y, height)]; }
 
-bool SimulationCellGrid::get_cell_phase(const std::pair<int, int>& coordinates) const
+bool SimulationCellGrid::get_cell_phase(const Coordinates& coordinates) const
 {
     return get_cell_phase(coordinates.first, coordinates.second);
 }
 
-std::pair<int, int> SimulationCellGrid::get_neighbor_indices(int x, int y, DIRECTION neighbor_direction) const
+Coordinates SimulationCellGrid::get_neighbor_indices(int x, int y, DIRECTION neighbor_direction) const
 {
     // Check that direction is valid
     if (staggered && (neighbor_direction == DIRECTION::N || neighbor_direction == DIRECTION::S))
@@ -124,7 +124,7 @@ std::pair<int, int> SimulationCellGrid::get_neighbor_indices(int x, int y, DIREC
     return std::make_pair(modulo(x + dx, width), modulo(y + dy, height));
 }
 
-std::pair<int, int> SimulationCellGrid::get_neighbor_indices(const std::pair<int, int>& coordinates,
+Coordinates SimulationCellGrid::get_neighbor_indices(const Coordinates& coordinates,
                                                              DIRECTION neighbor_direction) const
 {
     return get_neighbor_indices(coordinates.first, coordinates.second, neighbor_direction);
@@ -132,11 +132,11 @@ std::pair<int, int> SimulationCellGrid::get_neighbor_indices(const std::pair<int
 
 bool SimulationCellGrid::get_neighbor_phase(int x, int y, DIRECTION neighbor_direction) const
 {
-    std::pair<int, int> neighbor_indices = get_neighbor_indices(x, y, neighbor_direction);
+    Coordinates neighbor_indices = get_neighbor_indices(x, y, neighbor_direction);
     return get_cell_phase(neighbor_indices.first, neighbor_indices.second);
 }
 
-bool SimulationCellGrid::get_neighbor_phase(const std::pair<int, int>& coordinates, DIRECTION neighbor_direction) const
+bool SimulationCellGrid::get_neighbor_phase(const Coordinates& coordinates, DIRECTION neighbor_direction) const
 {
     return get_neighbor_phase(coordinates.first, coordinates.second, neighbor_direction);
 }

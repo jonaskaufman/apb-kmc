@@ -32,6 +32,9 @@ enum class DIRECTION
     SW
 };
 
+/// Coordinate pair
+using Coordinates = std::pair<int, int>;
+
 /// Two-dimensional square grid of pixel values (x is first dimension, y is second dimension)
 using PixelGrid = std::vector<std::vector<double>>;
 
@@ -64,16 +67,16 @@ public:
 
     /// Returns the phase of the cell at (x, y)
     bool get_cell_phase(int x, int y) const;
-    bool get_cell_phase(const std::pair<int, int>& coordinates) const;
+    bool get_cell_phase(const Coordinates& coordinates) const;
 
     /// Returns the coordinates of the given neighbor of the cell at (x, y)
-    std::pair<int, int> get_neighbor_indices(int x, int y, DIRECTION neighbor_direction) const;
-    std::pair<int, int> get_neighbor_indices(const std::pair<int, int>& coordinates,
+    Coordinates get_neighbor_indices(int x, int y, DIRECTION neighbor_direction) const;
+    Coordinates get_neighbor_indices(const Coordinates& coordinates,
                                              DIRECTION neighbor_direction) const;
 
     /// Returns the phase of the given neighbor of the cell at (x, y)
     bool get_neighbor_phase(int x, int y, DIRECTION neighbor_direction) const;
-    bool get_neighbor_phase(const std::pair<int, int>& coordinates, DIRECTION neighbor_direction) const;
+    bool get_neighbor_phase(const Coordinates& coordinates, DIRECTION neighbor_direction) const;
 
     /// Flips the phase of the cell at (x, y) to the opposite of its current value
     void flip_cell_phase(int x, int y);

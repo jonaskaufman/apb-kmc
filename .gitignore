@@ -33,3 +33,6 @@
 
 # Python
 __pycache__
+
+# Other
+.ycm_extra_conf.py

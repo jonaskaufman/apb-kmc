@@ -24,13 +24,8 @@ Simulation::Simulation(BOUNDARY_TYPE boundary_type, const SimulationCellGrid& in
 
     // Initialize event selector
     double rate_upper_bound = 1.0;
-    std::vector<ID> event_id_list;
-    for (int i = 0; i < event_list_ptr->size(); ++i)
-    {
-        event_id_list.push_back(i);
-    }
     selector_ptr =
-        std::make_unique<lotto::RejectionEventSelector<ID, EventRateCalculator>>(rate_calculator_ptr, rate_upper_bound, event_id_list);
+        std::make_unique<lotto::RejectionEventSelector<ID, EventRateCalculator>>(rate_calculator_ptr, rate_upper_bound, generate_event_id_list());
 }
 
 void Simulation::step()
@@ -159,4 +154,22 @@ std::vector<Event> Simulation::generate_event_list() const
     }
     return event_list;
 }
+
+std::vector<ID> Simulation::generate_event_id_list() const
+{
+    std::vector<ID> event_id_list;
+    for (int i = 0; i < event_list_ptr->size(); ++i)
+    {
+        event_id_list.push_back(i);
+    }
+    return event_id_list;
+}
+
+std::map<ID, std::vector<ID>> Simulation::generate_impact_table() const
+{
+    std::vector<ID> event_id_list = generate_event_id_list();
+    std::map<ID, std::vector<ID>> impact_table;
+    // TODO: set up impact table
+    return impact_table;
+};
 

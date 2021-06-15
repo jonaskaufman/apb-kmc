@@ -71,8 +71,11 @@ private:
     /// Generate event list
     std::vector<Event> generate_event_list() const;
 
+    // Generate event ID lis
+    std::vector<ID> generate_event_id_list() const;
+
     // Generate impact table
-    std::map<ID, Event> generate_impact_table() const;
+    std::map<ID, std::vector<ID>> generate_impact_table() const;
 };
 
 #endif

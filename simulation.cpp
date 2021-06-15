@@ -2,60 +2,51 @@
 #include <random>
 #include <stdexcept>
 
-RandomGenerator::RandomGenerator()
-{
-    std::random_device device;
-    generator = std::mt19937_64(device());
-}
-
-int RandomGenerator::sample_integer_range(int maximum_value)
-{
-    return std::uniform_int_distribution<int>(0, maximum_value)(generator);
-}
-
-double RandomGenerator::sample_unit_interval() { return std::uniform_real_distribution<double>(0.0, 1.0)(generator); }
-
+// TODO check order is same as declaration
 Simulation::Simulation(BOUNDARY_TYPE boundary_type, const SimulationCellGrid& initial_grid, double temperature)
     : boundary_minus{boundary_type == BOUNDARY_TYPE::MINUS},
-      grid{initial_grid},
-      time{0},
+      grid_ptr{std::make_shared<SimulationCellGrid>(initial_grid)},
       temperature{temperature},
-      rate_calculator{boundary_type, temperature}
+      time{0}
 {
     // Check if grid is compatible with boundary type
     bool correct_staggered = boundary_minus;
-    if (grid.staggered != correct_staggered)
+    if (grid_ptr->staggered != correct_staggered)
     {
         throw std::runtime_error("Boundary type not compatible with grid.");
     }
-    populate_event_list();
-    reset_rate_cache();
+
+    // Initialize event list
+    event_list_ptr = std::make_shared<const std::vector<Event>>(generate_event_list());
+
+    // Initialize rate calculator
+    rate_calculator_ptr = std::make_shared<EventRateCalculator>(boundary_type, temperature, event_list_ptr, grid_ptr);
+
+    // Initialize event selector
+    double rate_upper_bound = 1.0;
+    std::vector<ID> event_id_list;
+    for (int i = 0; i < event_list_ptr->size(); ++i)
+    {
+        event_id_list.push_back(i);
+    }
+    selector_ptr =
+        std::make_unique<lotto::RejectionEventSelector<ID, EventRateCalculator>>(rate_calculator_ptr, rate_upper_bound, event_id_list);
 }
 
 void Simulation::step()
 {
-    int candidate_event_index = random_generator.sample_integer_range(event_list.size() - 1);
-    double rate = rate_cache[candidate_event_index];
-    if (rate == -1.0)
+    // Select event
+    auto event_id_and_time = selector_ptr->select_event();
+    ID accepted_event_id = event_id_and_time.first;
+    double time_step = event_id_and_time.second;
+
+    // Update grid
+    for (auto& indices : event_list_ptr->at(accepted_event_id))
     {
-        rate = calculate_rate(event_list[candidate_event_index]);
+        grid_ptr->flip_cell_phase(indices.first, indices.second);
     }
-    if (rate < 0 || rate > 1)
-    {
-        throw std::runtime_error("Rate is invalid.");
-    }
-    if (rate != 0.0)
-    {
-        if (rate > random_generator.sample_unit_interval())
-        {
-            for (auto& indices : event_list[candidate_event_index])
-            {
-                grid.flip_cell_phase(indices.first, indices.second);
-                reset_rate_cache();
-            }
-        }
-    }
-    double time_step = std::log(1.0 / random_generator.sample_unit_interval()) / event_list.size();
+
+    // Update time step
     if (time_step < 0)
     {
         throw std::runtime_error("Time step is invalid.");
@@ -65,7 +56,7 @@ void Simulation::step()
 
 void Simulation::pass()
 {
-    for (int i = 0; i < event_list.size(); i++)
+    for (int i = 0; i < event_list_ptr->size(); ++i)
     {
         step();
     }
@@ -73,7 +64,7 @@ void Simulation::pass()
 
 PixelGrid Simulation::get_phase_pixel_grid() const
 {
-    const PixelGrid phase_grid = grid.get_phase_pixel_grid();
+    const PixelGrid phase_grid = grid_ptr->get_phase_pixel_grid();
     int width = phase_grid.size();
     int height = phase_grid[0].size();
     int scaled_height = 4 * height;
@@ -93,7 +84,7 @@ PixelGrid Simulation::get_phase_pixel_grid() const
 
 PixelGrid Simulation::get_composition_pixel_grid() const
 {
-    const PixelGrid phase_grid = grid.get_phase_pixel_grid();
+    const PixelGrid phase_grid = grid_ptr->get_phase_pixel_grid();
     int width = phase_grid.size();
     int phase_grid_height = phase_grid[0].size();
     // Find the y coordinate of each boundary at x = 0
@@ -110,8 +101,7 @@ PixelGrid Simulation::get_composition_pixel_grid() const
 
     // zeta plus currently wrong!
     int n_boundaries = boundary_y_origins.size();
-    int composition_grid_height =
-        (boundary_minus ? (4 * phase_grid_height + 2 * n_boundaries) : (4 * phase_grid_height - n_boundaries));
+    int composition_grid_height = (boundary_minus ? (4 * phase_grid_height + 2 * n_boundaries) : (4 * phase_grid_height - n_boundaries));
     PixelGrid composition_grid(width, std::vector<double>(composition_grid_height, 0.5));
     // Follow each boundary along the x direction and update composition accordingly
     for (int b = 0; b < n_boundaries; b++)
@@ -152,25 +142,21 @@ std::vector<double> Simulation::get_average_composition_profile() const
     return average_pixels_horizontally(get_composition_pixel_grid());
 }
 
-void Simulation::populate_event_list()
+std::vector<Event> Simulation::generate_event_list() const
 {
-    event_list.clear();
-    for (int y = 0; y < grid.height; y++)
+    std::vector<Event> event_list;
+
+    for (int y = 0; y < grid_ptr->height; ++y)
     {
-        for (int x = 0; x < grid.width; x++)
+        for (int x = 0; x < grid_ptr->width; ++x)
         {
             event_list.push_back({std::make_pair(x, y)});
             if (!boundary_minus)
             {
-                event_list.push_back({std::make_pair(x, y), std::make_pair(modulo(x + 1, grid.width), y)});
+                event_list.push_back({std::make_pair(x, y), std::make_pair(modulo(x + 1, grid_ptr->width), y)});
             }
         }
     }
+    return event_list;
 }
 
-void Simulation::reset_rate_cache()
-{
-    rate_cache = std::vector<double>(event_list.size(), -1.0);
-}
-
-double Simulation::calculate_rate(const Event& event) const { return rate_calculator.calculate_rate(event, grid); }

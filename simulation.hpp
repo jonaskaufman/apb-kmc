@@ -49,6 +49,9 @@ private:
     /// Rate calculator
     std::shared_ptr<EventRateCalculator> rate_calculator_ptr;
 
+    /// List of all possible events that can occur over the course of a simulation
+    std::shared_ptr<const std::vector<Event>> event_list_ptr;
+
     /// Event selector
     // TODO: Change to rejection-free eventually
     std::unique_ptr<lotto::RejectionEventSelector<ID, EventRateCalculator>> selector_ptr;
@@ -61,9 +64,6 @@ private:
 
     /// Simulation temperature, in kelvin
     const double temperature;
-
-    /// List of all possible events that can occur over the course of a simulation
-    const std::vector<Event> event_list;
 
     /// Returns the rate of an event given the current configuration
     double calculate_rate(const Event& event) const;

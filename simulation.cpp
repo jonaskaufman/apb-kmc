@@ -23,9 +23,8 @@ Simulation::Simulation(BOUNDARY_TYPE boundary_type, const SimulationCellGrid& in
     rate_calculator_ptr = std::make_shared<EventRateCalculator>(boundary_type, temperature, event_list_ptr, grid_ptr);
 
     // Initialize event selector
-    double rate_upper_bound = 1.0;
-    selector_ptr = std::make_unique<lotto::RejectionEventSelector<ID, EventRateCalculator>>(
-        rate_calculator_ptr, rate_upper_bound, generate_event_id_list());
+    selector_ptr = std::make_unique<lotto::RejectionFreeEventSelector<ID, EventRateCalculator>>(
+        rate_calculator_ptr, generate_event_id_list(), generate_impact_table());
 }
 
 void Simulation::step()
@@ -36,9 +35,9 @@ void Simulation::step()
     double time_step = event_id_and_time.second;
 
     // Update grid
-    for (auto& indices : event_list_ptr->at(accepted_event_id))
+    for (const Coordinates& cell : event_list_ptr->at(accepted_event_id))
     {
-        grid_ptr->flip_cell_phase(indices.first, indices.second);
+        grid_ptr->flip_cell_phase(cell.first, cell.second);
     }
 
     // Update time step
@@ -179,13 +178,12 @@ std::map<Coordinates, std::vector<ID>> Simulation::generate_coordinates_ids_map(
     return coordinates_ids_map;
 }
 
+// TODO move this inside calculator?
 std::set<Coordinates> Simulation::generate_impact_neighborhood(const Event& impacted_event) const
 {
     std::set<Coordinates> neighborhood;
     for (const Coordinates& impacted_coordinates : impacted_event)
     {
-        neighborhood.insert(impacted_coordinates);
-
         // zeta minus
         //          NN
         //      NW      NE
@@ -199,6 +197,28 @@ std::set<Coordinates> Simulation::generate_impact_neighborhood(const Event& impa
         //  WW  W   0   E   EE
         //      SW  S   SE
         //          SS
+
+        neighborhood.insert(impacted_coordinates);
+        neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, DIRECTION::W));
+        neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, DIRECTION::E));
+        neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, DIRECTION::SW));
+        neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, DIRECTION::SE));
+        neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, DIRECTION::NW));
+        neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, DIRECTION::NE));
+        if (boundary_minus)
+        {
+            neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, {DIRECTION::SW, DIRECTION::SE}));
+            neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, {DIRECTION::NW, DIRECTION::NE}));
+        }
+        else
+        {
+            neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, DIRECTION::S));
+            neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, DIRECTION::N));
+            neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, {DIRECTION::W, DIRECTION::W}));
+            neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, {DIRECTION::E, DIRECTION::E}));
+            neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, {DIRECTION::S, DIRECTION::S}));
+            neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, {DIRECTION::N, DIRECTION::N}));
+        }
     }
     return neighborhood;
 }

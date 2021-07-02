@@ -94,7 +94,7 @@ bool EventRateCalculator::passes_additional_checks_zeta_plus(const Event& event)
         {
             bool phase_X = (phase == phase_W) ? phase_W : phase_E;
             DIRECTION direction_X = (phase == phase_W) ? DIRECTION::W : DIRECTION::E;
-            bool phase_X_X = grid_ptr->get_neighbor_phase(grid_ptr->get_neighbor_indices(event[0], direction_X), direction_X);
+            bool phase_X_X = grid_ptr->get_neighbor_phase(grid_ptr->get_neighbor_cell(event[0], direction_X), direction_X);
             if (phase_X_X != phase_X)
             {
                 return false;
@@ -104,7 +104,7 @@ bool EventRateCalculator::passes_additional_checks_zeta_plus(const Event& event)
     else if (event.size() == 2)
     {
         // Event cells must be in expected order
-        if (grid_ptr->get_neighbor_indices(event[0], DIRECTION::E) != event[1])
+        if (grid_ptr->get_neighbor_cell(event[0], DIRECTION::E) != event[1])
         {
             throw std::runtime_error("Cells for double atom event are in wrong order or not horizontally adjacent.");
         }
@@ -125,8 +125,8 @@ bool EventRateCalculator::passes_additional_checks_zeta_plus(const Event& event)
         // No single cell kinks should be created
         if (phase_0 == phase_0_W)
         {
-            bool phase_0_W_W = grid_ptr->get_neighbor_phase(grid_ptr->get_neighbor_indices(event[0], DIRECTION::W), DIRECTION::W);
-            bool phase_1_E_E = grid_ptr->get_neighbor_phase(grid_ptr->get_neighbor_indices(event[1], DIRECTION::E), DIRECTION::E);
+            bool phase_0_W_W = grid_ptr->get_neighbor_phase(grid_ptr->get_neighbor_cell(event[0], DIRECTION::W), DIRECTION::W);
+            bool phase_1_E_E = grid_ptr->get_neighbor_phase(grid_ptr->get_neighbor_cell(event[1], DIRECTION::E), DIRECTION::E);
             if ((phase_0_W_W != phase_0_W) || (phase_1_E_E != phase_1_E))
             {
                 return false;
@@ -197,7 +197,7 @@ std::pair<double, double> EventRateCalculator::calculate_barrier_and_energy_chan
     {
         bool phase_S = grid_ptr->get_neighbor_phase(event[0], DIRECTION::S);
         bool phase_E = grid_ptr->get_neighbor_phase(event[0], DIRECTION::E);
-        SUBLATTICE sublattice_E = get_sublattice_of_cell(grid_ptr->get_neighbor_indices(event[0], DIRECTION::E));
+        SUBLATTICE sublattice_E = get_sublattice_of_cell(grid_ptr->get_neighbor_cell(event[0], DIRECTION::E));
         if (phase_S == phase_E)
         {
             barrier = ((sublattice_E == SUBLATTICE::A) ? PLUS_KINK_MOVE_I : PLUS_KINK_MOVE_II);

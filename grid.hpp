@@ -6,7 +6,7 @@
 #include <vector>
 
 /// Calculates the non-negative value of a modulo b, assuming -b <= a < 2b
- inline int modulo(int a, int b)
+inline int modulo(int a, int b)
 {
     if (a < 0)
     {
@@ -70,9 +70,9 @@ public:
     bool get_cell_phase(const Coordinates& coordinates) const;
 
     /// Returns the coordinates of the given neighbor of the cell at (x, y)
-    Coordinates get_neighbor_indices(int x, int y, DIRECTION neighbor_direction) const;
-    Coordinates get_neighbor_indices(const Coordinates& coordinates,
-                                             DIRECTION neighbor_direction) const;
+    Coordinates get_neighbor_cell(int x, int y, DIRECTION neighbor_direction) const;
+    Coordinates get_neighbor_cell(const Coordinates& origin, DIRECTION neighbor_direction) const;
+    Coordinates get_neighbor_cell(const Coordinates& origin, std::vector<DIRECTION> neighbor_directions) const;
 
     /// Returns the phase of the given neighbor of the cell at (x, y)
     bool get_neighbor_phase(int x, int y, DIRECTION neighbor_direction) const;

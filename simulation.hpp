@@ -6,7 +6,6 @@
 #include "grid.hpp"
 #include <fstream>
 #include <iostream>
-#include <lotto/rejection.hpp>
 #include <lotto/rejection_free.hpp>
 #include <random>
 #include <set>
@@ -54,8 +53,7 @@ private:
     std::shared_ptr<const std::vector<Event>> event_list_ptr;
 
     /// Event selector
-    // TODO: Change to rejection-free eventually
-    std::unique_ptr<lotto::RejectionEventSelector<ID, EventRateCalculator>> selector_ptr;
+    std::unique_ptr<lotto::RejectionFreeEventSelector<ID, EventRateCalculator>> selector_ptr;
 
     /// Type of boundary being simulated (true for minus, false for plus)
     const bool boundary_minus;

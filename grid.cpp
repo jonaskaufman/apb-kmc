@@ -71,7 +71,7 @@ bool SimulationCellGrid::get_cell_phase(const Coordinates& coordinates) const
     return get_cell_phase(coordinates.first, coordinates.second);
 }
 
-Coordinates SimulationCellGrid::get_neighbor_indices(int x, int y, DIRECTION neighbor_direction) const
+Coordinates SimulationCellGrid::get_neighbor_cell(int x, int y, DIRECTION neighbor_direction) const
 {
     // Check that direction is valid
     if (staggered && (neighbor_direction == DIRECTION::N || neighbor_direction == DIRECTION::S))
@@ -116,24 +116,34 @@ Coordinates SimulationCellGrid::get_neighbor_indices(int x, int y, DIRECTION nei
     {
         dy = -1;
     }
-    // Check that indices make sense
+    // Check that coordinates make sense
     if ((dx == 0 && dy == 0) || dx < -1 || dx > 1 || dy < -1 || dy > 1)
     {
-        throw std::runtime_error("Neighbor indices do not correspond to a neighbor.");
+        throw std::runtime_error("Neighbor coordinates do not correspond to a neighbor.");
     }
     return std::make_pair(modulo(x + dx, width), modulo(y + dy, height));
 }
 
-Coordinates SimulationCellGrid::get_neighbor_indices(const Coordinates& coordinates,
-                                                             DIRECTION neighbor_direction) const
+Coordinates SimulationCellGrid::get_neighbor_cell(const Coordinates& origin, DIRECTION neighbor_direction) const
 {
-    return get_neighbor_indices(coordinates.first, coordinates.second, neighbor_direction);
+    return get_neighbor_cell(origin.first, origin.second, neighbor_direction);
+}
+
+Coordinates SimulationCellGrid::get_neighbor_cell(const Coordinates& origin,
+                                                  std::vector<DIRECTION> neighbor_directions) const
+{
+    Coordinates current_cell = origin;
+    for (DIRECTION next_direction : neighbor_directions)
+    {
+        current_cell = get_neighbor_cell(current_cell, next_direction);
+    }
+    return current_cell;
 }
 
 bool SimulationCellGrid::get_neighbor_phase(int x, int y, DIRECTION neighbor_direction) const
 {
-    Coordinates neighbor_indices = get_neighbor_indices(x, y, neighbor_direction);
-    return get_cell_phase(neighbor_indices.first, neighbor_indices.second);
+    Coordinates neighbor_cell = get_neighbor_cell(x, y, neighbor_direction);
+    return get_cell_phase(neighbor_cell.first, neighbor_cell.second);
 }
 
 bool SimulationCellGrid::get_neighbor_phase(const Coordinates& coordinates, DIRECTION neighbor_direction) const

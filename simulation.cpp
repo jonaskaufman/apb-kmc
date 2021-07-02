@@ -24,8 +24,8 @@ Simulation::Simulation(BOUNDARY_TYPE boundary_type, const SimulationCellGrid& in
 
     // Initialize event selector
     double rate_upper_bound = 1.0;
-    selector_ptr =
-        std::make_unique<lotto::RejectionEventSelector<ID, EventRateCalculator>>(rate_calculator_ptr, rate_upper_bound, generate_event_id_list());
+    selector_ptr = std::make_unique<lotto::RejectionEventSelector<ID, EventRateCalculator>>(
+        rate_calculator_ptr, rate_upper_bound, generate_event_id_list());
 }
 
 void Simulation::step()
@@ -96,7 +96,8 @@ PixelGrid Simulation::get_composition_pixel_grid() const
 
     // zeta plus currently wrong!
     int n_boundaries = boundary_y_origins.size();
-    int composition_grid_height = (boundary_minus ? (4 * phase_grid_height + 2 * n_boundaries) : (4 * phase_grid_height - n_boundaries));
+    int composition_grid_height =
+        (boundary_minus ? (4 * phase_grid_height + 2 * n_boundaries) : (4 * phase_grid_height - n_boundaries));
     PixelGrid composition_grid(width, std::vector<double>(composition_grid_height, 0.5));
     // Follow each boundary along the x direction and update composition accordingly
     for (int b = 0; b < n_boundaries; b++)
@@ -165,11 +166,63 @@ std::vector<ID> Simulation::generate_event_id_list() const
     return event_id_list;
 }
 
+std::map<Coordinates, std::vector<ID>> Simulation::generate_coordinates_ids_map() const
+{
+    std::map<Coordinates, std::vector<ID>> coordinates_ids_map;
+    for (const ID& event_id : generate_event_id_list())
+    {
+        for (const Coordinates& coordinates : event_list_ptr->at(event_id))
+        {
+            coordinates_ids_map[coordinates].push_back(event_id);
+        }
+    }
+    return coordinates_ids_map;
+}
+
+std::set<Coordinates> Simulation::generate_impact_neighborhood(const Event& impacted_event) const
+{
+    std::set<Coordinates> neighborhood;
+    for (const Coordinates& impacted_coordinates : impacted_event)
+    {
+        neighborhood.insert(impacted_coordinates);
+
+        // zeta minus
+        //          NN
+        //      NW      NE
+        //  W       0       E
+        //      SW      SE
+        //          SS
+
+        // zeta plus
+        //          NN
+        //      NW  N   NE
+        //  WW  W   0   E   EE
+        //      SW  S   SE
+        //          SS
+    }
+    return neighborhood;
+}
+
 std::map<ID, std::vector<ID>> Simulation::generate_impact_table() const
 {
     std::vector<ID> event_id_list = generate_event_id_list();
+    std::map<Coordinates, std::vector<ID>> coordinates_ids_map = generate_coordinates_ids_map();
     std::map<ID, std::vector<ID>> impact_table;
-    // TODO: set up impact table
+    // Go through impacted events
+    for (const ID& impacted_event_id : event_id_list)
+    {
+        // Go through cells that impact event's rate
+        for (const Coordinates& impacter_coordinates :
+             generate_impact_neighborhood(event_list_ptr->at(impacted_event_id)))
+        {
+            // Go through events that contain those cells
+            for (const ID& impacter_event_id : coordinates_ids_map.at(impacter_coordinates))
+            {
+                // Add impacted event to appropriate places in impact table
+                impact_table[impacter_event_id].push_back(impacted_event_id);
+            }
+        }
+    }
     return impact_table;
 };
 

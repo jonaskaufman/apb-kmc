@@ -9,6 +9,7 @@
 #include <lotto/rejection.hpp>
 #include <lotto/rejection_free.hpp>
 #include <random>
+#include <set>
 #include <vector>
 
 /**
@@ -71,8 +72,14 @@ private:
     /// Generate event list
     std::vector<Event> generate_event_list() const;
 
-    // Generate event ID lis
+    // Generate event ID list
     std::vector<ID> generate_event_id_list() const;
+
+    // Generate map from cell coordinates to event IDs
+    std::map<Coordinates, std::vector<ID>> generate_coordinates_ids_map() const;
+
+    // Generate the list of cell coordinates that impact the rate of a given event
+    std::set<Coordinates> generate_impact_neighborhood(const Event& impacted_event) const;
 
     // Generate impact table
     std::map<ID, std::vector<ID>> generate_impact_table() const;

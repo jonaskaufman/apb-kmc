@@ -76,7 +76,8 @@ public:
 
     /// Returns the phase of the given neighbor of the cell at (x, y)
     bool get_neighbor_phase(int x, int y, DIRECTION neighbor_direction) const;
-    bool get_neighbor_phase(const Coordinates& coordinates, DIRECTION neighbor_direction) const;
+    bool get_neighbor_phase(const Coordinates& origin, DIRECTION neighbor_direction) const;
+    bool get_neighbor_phase(const Coordinates& origin, std::vector<DIRECTION> neighbor_directions) const;
 
     /// Flips the phase of the cell at (x, y) to the opposite of its current value
     void flip_cell_phase(int x, int y);

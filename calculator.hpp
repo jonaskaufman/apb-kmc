@@ -39,8 +39,7 @@ public:
                         const std::shared_ptr<const std::vector<Event>>& event_list_ptr,
                         const std::shared_ptr<const SimulationCellGrid>& grid_ptr);
 
-    /// Returns the rate of an event given the current configuration
-    //    double calculate_rate(const Event& event, const SimulationCellGrid& grid) const;
+    /// Returns the rate of an event given its ID
     double calculate_rate(ID event_id) const;
 
 private:
@@ -71,8 +70,8 @@ private:
     double calculate_barrier(const Event& event) const;
 
     /// Returns the base barrier height and endpoint energy change for an event
-    std::pair<double, double> calculate_barrier_and_energy_change_zeta_minus(const Event& event) const;
-    std::pair<double, double> calculate_barrier_and_energy_change_zeta_plus(const Event& event) const;
+    std::pair<double, double> calculate_base_barrier_and_energy_change_zeta_minus(const Event& event) const;
+    std::pair<double, double> calculate_base_barrier_and_energy_change_zeta_plus(const Event& event) const;
 
     /// Returns the sublattice (A or B) of the atom in given cell based on boundary type and phase
     SUBLATTICE get_sublattice_of_cell(const Coordinates& coordinates) const;

@@ -146,9 +146,14 @@ bool SimulationCellGrid::get_neighbor_phase(int x, int y, DIRECTION neighbor_dir
     return get_cell_phase(neighbor_cell.first, neighbor_cell.second);
 }
 
-bool SimulationCellGrid::get_neighbor_phase(const Coordinates& coordinates, DIRECTION neighbor_direction) const
+bool SimulationCellGrid::get_neighbor_phase(const Coordinates& origin, DIRECTION neighbor_direction) const
 {
-    return get_neighbor_phase(coordinates.first, coordinates.second, neighbor_direction);
+    return get_neighbor_phase(origin.first, origin.second, neighbor_direction);
+}
+
+bool SimulationCellGrid::get_neighbor_phase(const Coordinates& origin, std::vector<DIRECTION> neighbor_directions) const
+{
+    return get_cell_phase(get_neighbor_cell(origin, neighbor_directions));
 }
 
 void SimulationCellGrid::flip_cell_phase(int x, int y)

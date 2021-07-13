@@ -5,19 +5,8 @@
 #include <utility>
 #include <vector>
 
-/// Calculates the non-negative value of a modulo b, assuming -b <= a < 2b
-inline int modulo(int a, int b)
-{
-    if (a < 0)
-    {
-        return a + b;
-    }
-    if (a >= b)
-    {
-        return a - b;
-    }
-    return a;
-}
+/// Calculates the non-negative value of a modulo b
+inline int modulo(int a, int b) { return (a % b + b) % b; }
 
 /// Cardinal directions
 enum class DIRECTION

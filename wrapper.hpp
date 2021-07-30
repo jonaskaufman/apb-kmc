@@ -6,16 +6,23 @@
 
 /// Calculate initial boundary spacings that will produce a roughly sinusoidal composition profile with close to the
 // desired average, amplitude, and height (wavelength)
-std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& boundary_type,
-                                                     const double& composition_average,
-                                                     const double& composition_amplitude,
-                                                     const int& target_physical_height);
+std::vector<int> spacings_for_sinusoidal_composition(BOUNDARY_TYPE boundary_type,
+                                                     double composition_average,
+                                                     double composition_amplitude,
+                                                     double target_physical_height);
 
-/// Average boundary spacing for a given boundary type and composition 
-double average_spacing_from_composition(const BOUNDARY_TYPE& boundary_type, const double& composition);
+/// Average boundary spacing for a given boundary type and composition
+double average_spacing_from_composition(BOUNDARY_TYPE boundary_type, double composition);
 
 /// Height accounting for height of boundaries themselves, given a set of boundary spacings
-double physical_height(const BOUNDARY_TYPE& boundary_type, const std::vector<int>& boundary_cell_spacings);
+double physical_height(BOUNDARY_TYPE boundary_type, const std::vector<int>& boundary_cell_spacings);
+
+/// Print a report summarizing the initial spacings
+void print_initialization_report(BOUNDARY_TYPE boundary_type,
+                                 const std::vector<int>& initial_spacings,
+                                 double target_physical_height,
+                                 double target_composition,
+                                 std::ostream& output_stream);
 
 /// Wrapper to set up and perform single or multiple simulations and process their output
 class SimulationWrapper
@@ -24,27 +31,19 @@ public:
     SimulationWrapper() = delete;
 
     /// Construct a wrapper with given simulation conditions
-    SimulationWrapper(const BOUNDARY_TYPE& boundary_type,
-                      const int& width,
+    SimulationWrapper(BOUNDARY_TYPE boundary_type,
+                      int width,
                       const std::vector<int>& initial_spacings,
-                      const double& temperature);
+                      double temperature);
 
     /// Perform a single simulation for a given number of passes
     //  The phase grid, composition grid, and composition profile are printed out
     //  (with a time stamp) every print_interval passes, to their respective file streams
-    void perform_single(const int& total_passes,
-                        const int& print_interval,
+    void perform_single(int total_passes,
+                        int print_interval,
                         std::ofstream& phase_grid_file_stream,
                         std::ofstream& composition_grid_file_stream,
                         std::ofstream& composition_profile_file_stream);
-
-    /// Perform a set of simulations under the same conditions, each for a given numberr of passes
-    //  The composition profile for each simulation is printed out (with a time stamp)
-    //  every print_interval passes, to the file stream
-    void perform_set(const int& total_simulations,
-                     const int& total_passes,
-                     const int& print_interval,
-                     std::ofstream& composition_profile_file_stream);
 
 private:
     /// Boundary type for simulations

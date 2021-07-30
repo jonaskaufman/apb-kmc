@@ -6,12 +6,11 @@
 #include <fstream>
 #include <numeric>
 #include <vector>
-#include <ctime>
 
-std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& boundary_type,
-                                                     const double& composition_average,
-                                                     const double& composition_amplitude,
-                                                     const int& target_physical_height)
+std::vector<int> spacings_for_sinusoidal_composition(BOUNDARY_TYPE boundary_type,
+                                                     double composition_average,
+                                                     double composition_amplitude,
+                                                     double target_physical_height)
 {
     // Convert the desired average and amplitude of composition to boundary spacing values
     double spacing_average = average_spacing_from_composition(boundary_type, composition_average);
@@ -29,14 +28,14 @@ std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& bounda
     // Accounting for the added physical height of boundaries themselves,
     // calculate the approximate number of boundaries and total cell height
     double additional_boundary_height = (boundary_type == BOUNDARY_TYPE::MINUS) ? 0.5 : -0.25;
-    double spacing_average_adjusted = spacing_average + additional_boundary_height; 
+    double spacing_average_adjusted = spacing_average + additional_boundary_height;
     int n_boundaries = std::round((double)target_physical_height / spacing_average_adjusted);
     if (n_boundaries % 2 != 0) // Number of boundaries must be even to ensure periodicity
     {
         n_boundaries += 1;
     }
     int cell_height = std::round(n_boundaries * spacing_average);
-    double physical_height = cell_height + additional_boundary_height*n_boundaries; 
+    double physical_height = cell_height + additional_boundary_height * n_boundaries;
 
     // Obtain raw boundary spacing values by sampling sinusoidal composition profile
     std::vector<double> raw_spacings(n_boundaries, -1);
@@ -45,10 +44,10 @@ std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& bounda
     for (int i = 0; i < n_boundaries; i++)
     {
         double t = 2 * M_PI * y_position / physical_height;
-         
-        double composition_sample = composition_amplitude*std::cos(t + phase_shift) + composition_average;
+
+        double composition_sample = composition_amplitude * std::cos(t + phase_shift) + composition_average;
         raw_spacings[i] = average_spacing_from_composition(boundary_type, composition_sample);
-        if (i < n_boundaries/2)
+        if (i < n_boundaries / 2)
         {
             y_position += (raw_spacings[i] + additional_boundary_height);
         }
@@ -76,7 +75,7 @@ std::vector<int> spacings_for_sinusoidal_composition(const BOUNDARY_TYPE& bounda
     return spacings;
 }
 
-double average_spacing_from_composition(const BOUNDARY_TYPE& boundary_type, const double& composition)
+double average_spacing_from_composition(BOUNDARY_TYPE boundary_type, double composition)
 {
     if (boundary_type == BOUNDARY_TYPE::MINUS)
     {
@@ -88,30 +87,53 @@ double average_spacing_from_composition(const BOUNDARY_TYPE& boundary_type, cons
     }
 }
 
-double physical_height(const BOUNDARY_TYPE& boundary_type, const std::vector<int>& boundary_cell_spacings)
+double physical_height(BOUNDARY_TYPE boundary_type, const std::vector<int>& boundary_cell_spacings)
 {
     double cell_height = std::accumulate(boundary_cell_spacings.begin(), boundary_cell_spacings.end(), 0);
-    return cell_height + ((boundary_type == BOUNDARY_TYPE::MINUS) ? 0.5 : -0.25)*boundary_cell_spacings.size(); 
+    return cell_height + ((boundary_type == BOUNDARY_TYPE::MINUS) ? 0.5 : -0.25) * boundary_cell_spacings.size();
 }
 
-SimulationWrapper::SimulationWrapper(const BOUNDARY_TYPE& boundary_type,
-                                     const int& width,
+void print_initialization_report(BOUNDARY_TYPE boundary_type,
+                                 const std::vector<int>& initial_spacings,
+                                 double target_physical_height,
+                                 double target_composition,
+                                 std::ostream& output_stream)
+{
+    output_stream << "Boundary type: " << (boundary_type == BOUNDARY_TYPE::MINUS ? "-" : "+") << std::endl;
+    output_stream << "Initial spacings: ";
+    for (auto& a : initial_spacings)
+    {
+        output_stream << a << " ";
+    }
+    output_stream << std::endl;
+    int cell_height = std::accumulate(initial_spacings.begin(), initial_spacings.end(), 0);
+    double true_height = physical_height(boundary_type, initial_spacings);
+    output_stream << "Cell height: " << cell_height << std::endl;
+    output_stream << "True height (including boundaries): " << true_height << " (Target: " << target_physical_height
+                  << ")" << std::endl;
+    int n_boundaries = initial_spacings.size();
+    double spacing_average = (double)cell_height / (double)n_boundaries;
+    double target_spacing_average = average_spacing_from_composition(boundary_type, target_composition);
+    output_stream << "Average cell spacing: " << spacing_average << " (Target: " << target_spacing_average << ")"
+                  << std::endl;
+    return;
+}
+
+SimulationWrapper::SimulationWrapper(BOUNDARY_TYPE boundary_type,
+                                     int width,
                                      const std::vector<int>& initial_spacings,
-                                     const double& temperature)
+                                     double temperature)
     : boundary_type{boundary_type}, width{width}, initial_spacings{initial_spacings}, temperature{temperature}
 {
 }
 
-void SimulationWrapper::perform_single(const int& total_passes,
-                                       const int& print_interval,
+void SimulationWrapper::perform_single(int total_passes,
+                                       int print_interval,
                                        std::ofstream& phase_grid_file_stream,
                                        std::ofstream& composition_grid_file_stream,
                                        std::ofstream& composition_profile_file_stream)
 {
-    std::time_t start, end;
-    std::time(&start);
     Simulation simulation = setup();
-    std::cout << "Running simulation..." << std::endl;
     for (int n = 0; n < total_passes; n++)
     {
         if (n % print_interval == 0)
@@ -129,52 +151,6 @@ void SimulationWrapper::perform_single(const int& total_passes,
         }
         simulation.pass();
     }
-    std::cout << "Done. Results files written." << std::endl;
-    std::time(&end);
-    double elapsed = double(end - start);
-    std::cout << "Elapsed time: " << elapsed << " seconds" << std::endl;
-}
-
-void SimulationWrapper::perform_set(const int& total_simulations,
-                                    const int& total_passes,
-                                    const int& print_interval,
-                                    std::ofstream& composition_profile_file_stream)
-{
-    std::vector<double> times;
-    std::vector<std::vector<std::vector<double>>> average_compositions(total_simulations,
-                                                                       std::vector<std::vector<double>>());
-    for (int k = 0; k < total_simulations; k++)
-    {
-        std::cout << "Running simulation " << k << "..." << std::endl;
-        Simulation simulation = setup();
-        for (int n = 0; n < total_passes; n++)
-        {
-            if (n % print_interval == 0)
-            {
-                if (k == 0)
-                {
-                    times.push_back(simulation.get_time());
-                }
-                average_compositions[k].push_back(simulation.get_average_composition_profile());
-            }
-            simulation.pass();
-        }
-        std::cout << "Done" << std::endl;
-    }
-    std::cout << "Writing results file..." << std::endl;
-    for (int t = 0; t < times.size(); t++)
-    {
-        composition_profile_file_stream << times[t] << std::endl;
-        for (int k = 0; k < total_simulations; k++)
-        {
-            for (auto& a : average_compositions[k][t])
-            {
-                composition_profile_file_stream << a << " ";
-            }
-            composition_profile_file_stream << "\n";
-        }
-    }
-    std::cout << "Done" << std::endl;
 }
 
 Simulation SimulationWrapper::setup() const

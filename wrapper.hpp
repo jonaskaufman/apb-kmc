@@ -39,8 +39,10 @@ public:
     /// Perform a single simulation for a given number of passes
     //  The phase grid, composition grid, and composition profile are printed out
     //  (with a time stamp) every print_interval passes, to their respective file streams
+    //  If full_output is false, only composition profile is written
     void perform_single(int total_passes,
                         int print_interval,
+                        bool full_output,
                         std::ofstream& phase_grid_file_stream,
                         std::ofstream& composition_grid_file_stream,
                         std::ofstream& composition_profile_file_stream);

@@ -129,6 +129,7 @@ SimulationWrapper::SimulationWrapper(BOUNDARY_TYPE boundary_type,
 
 void SimulationWrapper::perform_single(int total_passes,
                                        int print_interval,
+                                       bool full_output,
                                        std::ofstream& phase_grid_file_stream,
                                        std::ofstream& composition_grid_file_stream,
                                        std::ofstream& composition_profile_file_stream)
@@ -138,11 +139,14 @@ void SimulationWrapper::perform_single(int total_passes,
     {
         if (n % print_interval == 0)
         {
-            phase_grid_file_stream << simulation.get_time() << std::endl;
-            composition_grid_file_stream << simulation.get_time() << std::endl;
+            if (full_output)
+            {
+                phase_grid_file_stream << simulation.get_time() << std::endl;
+                composition_grid_file_stream << simulation.get_time() << std::endl;
+                print_pixel_grid(simulation.get_phase_pixel_grid(), phase_grid_file_stream);
+                print_pixel_grid(simulation.get_composition_pixel_grid(), composition_grid_file_stream);
+            }
             composition_profile_file_stream << simulation.get_time() << std::endl;
-            print_pixel_grid(simulation.get_phase_pixel_grid(), phase_grid_file_stream);
-            print_pixel_grid(simulation.get_composition_pixel_grid(), composition_grid_file_stream);
             for (auto& a : simulation.get_average_composition_profile())
             {
                 composition_profile_file_stream << a << " ";

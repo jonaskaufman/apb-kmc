@@ -29,6 +29,7 @@ int main(int argc, char* argv[])
     double temperature = input_settings["temperature"];
     int total_passes = input_settings["total_passes"];
     int print_interval = input_settings["print_interval"];
+    bool full_output = input_settings["full_output"];
 
     // Get initialization settings and calculate initial boundary spacings
     std::vector<int> initial_spacings;
@@ -54,14 +55,17 @@ int main(int argc, char* argv[])
         std::ofstream phase_grid_file;
         std::ofstream composition_grid_file;
         std::ofstream composition_profile_file;
-        phase_grid_file.open("phase_grid.out");
-        composition_grid_file.open("composition_grid.out");
+        if (full_output)
+        {
+            phase_grid_file.open("phase_grid.out");
+            composition_grid_file.open("composition_grid.out");
+        }
         composition_profile_file.open("composition_profile.out");
 
         std::time_t start, end;
         std::time(&start);
         std::cout << "Running simulation..." << std::endl;
-        wrapper.perform_single(total_passes, print_interval, phase_grid_file, composition_grid_file,
+        wrapper.perform_single(total_passes, print_interval, full_output, phase_grid_file, composition_grid_file,
                                composition_profile_file);
         phase_grid_file.close();
         composition_grid_file.close();

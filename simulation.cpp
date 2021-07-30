@@ -63,11 +63,11 @@ PixelGrid Simulation::get_phase_pixel_grid() const
     int height = phase_grid[0].size();
     int scaled_height = 4 * height;
     PixelGrid scaled_phase_grid(width, std::vector<double>(scaled_height, 0));
-    for (int y = 0; y < height; y++)
+    for (int y = 0; y < height; ++y)
     {
-        for (int x = 0; x < width; x++)
+        for (int x = 0; x < width; ++x)
         {
-            for (int dy = 0; dy < 4; dy++)
+            for (int dy = 0; dy < 4; ++dy)
             {
                 scaled_phase_grid[x][4 * y + dy] = phase_grid[x][y];
             }
@@ -83,7 +83,7 @@ PixelGrid Simulation::get_composition_pixel_grid() const
     int phase_grid_height = phase_grid[0].size();
     // Find the y coordinate of each boundary at x = 0
     std::vector<int> boundary_y_origins;
-    for (int y = 0; y < phase_grid_height; y++)
+    for (int y = 0; y < phase_grid_height; ++y)
     {
         double current_phase = phase_grid[0][y];
         double previous_phase = phase_grid[0][modulo(y - 1, phase_grid_height)];
@@ -99,11 +99,11 @@ PixelGrid Simulation::get_composition_pixel_grid() const
         (boundary_minus ? (4 * phase_grid_height + 2 * n_boundaries) : (4 * phase_grid_height - n_boundaries));
     PixelGrid composition_grid(width, std::vector<double>(composition_grid_height, 0.5));
     // Follow each boundary along the x direction and update composition accordingly
-    for (int b = 0; b < n_boundaries; b++)
+    for (int b = 0; b < n_boundaries; ++b)
     {
         int y_phase = boundary_y_origins[b];
         int y_comp = (boundary_minus ? (4 * y_phase + 2 * b) : (4 * y_phase - b));
-        for (int x = 0; x < width; x++)
+        for (int x = 0; x < width; ++x)
         {
             if (boundary_minus)
             {

@@ -41,7 +41,7 @@ std::vector<int> spacings_for_sinusoidal_composition(BOUNDARY_TYPE boundary_type
     std::vector<double> raw_spacings(n_boundaries, -1);
     double phase_shift = (boundary_type == BOUNDARY_TYPE::MINUS) ? 0.0 : M_PI;
     double y_position = 0.0;
-    for (int i = 0; i < n_boundaries; i++)
+    for (int i = 0; i < n_boundaries; ++i)
     {
         double t = 2 * M_PI * y_position / physical_height;
 
@@ -61,7 +61,7 @@ std::vector<int> spacings_for_sinusoidal_composition(BOUNDARY_TYPE boundary_type
     double raw_spacings_total = std::accumulate(raw_spacings.begin(), raw_spacings.end(), 0.0);
     double spacing_scaling = (double)cell_height / raw_spacings_total;
     std::vector<int> spacings(n_boundaries, -1);
-    for (int i = 0; i < n_boundaries; i++)
+    for (int i = 0; i < n_boundaries; ++i)
     {
         spacings[i] = std::round(spacing_scaling * raw_spacings[i]); // Final spacing values must be integers
     }
@@ -134,7 +134,7 @@ void SimulationWrapper::perform_single(int total_passes,
                                        std::ofstream& composition_profile_file_stream)
 {
     Simulation simulation = setup();
-    for (int n = 0; n < total_passes; n++)
+    for (int n = 0; n < total_passes; ++n)
     {
         if (n % print_interval == 0)
         {

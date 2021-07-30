@@ -4,9 +4,9 @@
 
 void print_pixel_grid(const PixelGrid& pixel_grid, std::ostream& output_stream)
 {
-    for (int y = 0; y < pixel_grid[0].size(); y++)
+    for (int y = 0; y < pixel_grid[0].size(); ++y)
     {
-        for (int x = 0; x < pixel_grid.size(); x++)
+        for (int x = 0; x < pixel_grid.size(); ++x)
         {
             output_stream << pixel_grid[x][y] << " ";
         }
@@ -19,10 +19,10 @@ std::vector<double> average_pixels_horizontally(const PixelGrid& pixel_grid)
     int pixel_grid_width = pixel_grid.size();
     int pixel_grid_height = pixel_grid[0].size();
     std::vector<double> averages(pixel_grid_height, 0);
-    for (int y = 0; y < pixel_grid_height; y++)
+    for (int y = 0; y < pixel_grid_height; ++y)
     {
         double total = 0.0;
-        for (int x = 0; x < pixel_grid_width; x++)
+        for (int x = 0; x < pixel_grid_width; ++x)
         {
             total += pixel_grid[x][y];
         }
@@ -49,16 +49,16 @@ SimulationCellGrid::SimulationCellGrid(int width, const std::vector<int>& block_
     bool flipped = false;
     for (const auto& spacing : block_heights)
     {
-        for (int y_s = 0; y_s < spacing; y_s++)
+        for (int y_s = 0; y_s < spacing; ++y_s)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < width; ++x)
             {
                 if (flipped)
                 {
                     flip_cell_phase(x, y);
                 }
             }
-            y++;
+            ++y;
         }
         flipped = !flipped;
     }
@@ -172,10 +172,10 @@ PixelGrid SimulationCellGrid::get_phase_pixel_grid() const
     // Double width always
     int pixel_grid_width = 2 * width;
     PixelGrid pixel_grid(pixel_grid_width, std::vector<double>(height, -1.0));
-    for (int y = 0; y < height; y++)
+    for (int y = 0; y < height; ++y)
     {
         // Set values for current row
-        for (int x = 0; x < width; x++)
+        for (int x = 0; x < width; ++x)
         {
             // Each cell becomes two pixels
             int phase = get_cell_phase(x, y);
@@ -184,7 +184,7 @@ PixelGrid SimulationCellGrid::get_phase_pixel_grid() const
             pixel_grid[modulo(x_next, pixel_grid_width)][y] = phase;
         }
         // Check that all values have been set
-        for (int x = 0; x < pixel_grid_width; x++)
+        for (int x = 0; x < pixel_grid_width; ++x)
         {
             if (pixel_grid[x][y] < 0)
             {

@@ -31,12 +31,12 @@ public:
     /// Returns the simulation time
     double get_time() const { return time; }
 
-    // TODO: Check dimensions of grid outputs
-    //
-    /// Returns a pixel grid of phase values (0 or 1). Width is doubled for zeta minus simulation.
+    /// Returns a pixel grid of phase values (0 or 1).
+    //  Cell width and height are scaled by factors of 2 and 4, respectively.
     PixelGrid get_phase_pixel_grid() const;
 
-    /// Returns a pixel grid of composition values. Height is doubled. Width is doubled for zeta minus simulation.
+    /// Returns a pixel grid of composition values.
+    //  Cell width and height are scaled by factors of 2 and 4, respectively.
     PixelGrid get_composition_pixel_grid() const;
 
     /// Returns average composition profile obtained by averaging each row of the composition pixel grid.
@@ -73,7 +73,7 @@ private:
     // Generate event ID list
     std::vector<ID> generate_event_id_list() const;
 
-    // Generate map from cell coordinates to event IDs
+    // Generate map from cell coordinates to IDs of events involving that cell
     std::map<Coordinates, std::vector<ID>> generate_coordinates_ids_map() const;
 
     // Generate the list of cell coordinates that impact the rate of a given event

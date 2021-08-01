@@ -72,7 +72,7 @@ public:
     void flip_cell_phase(int x, int y);
     void flip_cell_phase(const Coordinates& coordinates);
 
-    /// Returns a pixel representation of the grid with phases 0 or 1. Width is always doubled.
+    /// Returns a pixel representation of the grid with phases 0 or 1. Cell width is doubled.
     PixelGrid get_phase_pixel_grid() const;
 
 private:

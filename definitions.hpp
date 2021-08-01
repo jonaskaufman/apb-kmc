@@ -6,9 +6,10 @@
 
 // TODO: Move other aliases here?
 
-// Kinetic event represented by indices of grid cells to flip
+/// Kinetic event represented by indices of grid cells to flip
 using Event = std::vector<std::pair<int, int>>;
 
+/// Event IDs
 using ID = int;
 
 /// Antiphase boundary types (zeta minus or zeta plus)

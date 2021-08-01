@@ -1,8 +1,8 @@
 #include "simulation.hpp"
+#include <cassert>
 #include <random>
 #include <stdexcept>
 
-// TODO check order is same as declaration
 Simulation::Simulation(BOUNDARY_TYPE boundary_type, const CellGrid& initial_grid, double temperature)
     : boundary_minus{boundary_type == BOUNDARY_TYPE::MINUS},
       grid_ptr{std::make_shared<CellGrid>(initial_grid)},
@@ -41,11 +41,9 @@ void Simulation::step()
     }
 
     // Update time step
-    if (time_step < 0)
-    {
-        throw std::runtime_error("Time step is invalid.");
-    }
+    assert(!(time_step < 0));
     time += time_step;
+    return;
 }
 
 void Simulation::pass()
@@ -54,6 +52,7 @@ void Simulation::pass()
     {
         step();
     }
+    return;
 }
 
 PixelGrid Simulation::get_phase_pixel_grid() const
@@ -93,7 +92,6 @@ PixelGrid Simulation::get_composition_pixel_grid() const
         }
     }
 
-    // zeta plus currently wrong!
     int n_boundaries = boundary_y_origins.size();
     int composition_grid_height =
         (boundary_minus ? (4 * phase_grid_height + 2 * n_boundaries) : (4 * phase_grid_height - n_boundaries));
@@ -114,6 +112,7 @@ PixelGrid Simulation::get_composition_pixel_grid() const
             {
                 composition_grid[x][modulo(y_comp, composition_grid_height)] = 1.0;
             }
+            // Adjust y position
             int x_next = modulo(x + 1, width);
             int y_phase_previous = modulo(y_phase - 1, phase_grid_height);
             int y_phase_current = modulo(y_phase, phase_grid_height);
@@ -140,7 +139,6 @@ std::vector<double> Simulation::get_average_composition_profile() const
 std::vector<Event> Simulation::generate_event_list() const
 {
     std::vector<Event> event_list;
-
     for (int y = 0; y < grid_ptr->height; ++y)
     {
         for (int x = 0; x < grid_ptr->width; ++x)
@@ -178,7 +176,6 @@ std::map<Coordinates, std::vector<ID>> Simulation::generate_coordinates_ids_map(
     return coordinates_ids_map;
 }
 
-// TODO move this inside calculator?
 std::set<Coordinates> Simulation::generate_impact_neighborhood(const Event& impacted_event) const
 {
     std::set<Coordinates> neighborhood;
@@ -207,8 +204,10 @@ std::set<Coordinates> Simulation::generate_impact_neighborhood(const Event& impa
         neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, DIRECTION::NE));
         if (boundary_minus)
         {
-            neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, {DIRECTION::SW, DIRECTION::SE}));
-            neighborhood.insert(grid_ptr->get_neighbor_cell(impacted_coordinates, {DIRECTION::NW, DIRECTION::NE}));
+            neighborhood.insert(
+                grid_ptr->get_neighbor_cell(impacted_coordinates, {DIRECTION::SW, DIRECTION::SE})); // SS
+            neighborhood.insert(
+                grid_ptr->get_neighbor_cell(impacted_coordinates, {DIRECTION::NW, DIRECTION::NE})); // NN
         }
         else
         {

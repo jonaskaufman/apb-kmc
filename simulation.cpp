@@ -3,9 +3,9 @@
 #include <stdexcept>
 
 // TODO check order is same as declaration
-Simulation::Simulation(BOUNDARY_TYPE boundary_type, const SimulationCellGrid& initial_grid, double temperature)
+Simulation::Simulation(BOUNDARY_TYPE boundary_type, const CellGrid& initial_grid, double temperature)
     : boundary_minus{boundary_type == BOUNDARY_TYPE::MINUS},
-      grid_ptr{std::make_shared<SimulationCellGrid>(initial_grid)},
+      grid_ptr{std::make_shared<CellGrid>(initial_grid)},
       temperature{temperature},
       time{0}
 {
@@ -37,7 +37,7 @@ void Simulation::step()
     // Update grid
     for (const Coordinates& cell : event_list_ptr->at(accepted_event_id))
     {
-        grid_ptr->flip_cell_phase(cell.first, cell.second);
+        grid_ptr->flip_cell_phase(cell);
     }
 
     // Update time step

@@ -64,6 +64,10 @@ std::vector<int> spacings_for_sinusoidal_composition(BOUNDARY_TYPE boundary_type
     for (int i = 0; i < n_boundaries; ++i)
     {
         spacings[i] = std::round(spacing_scaling * raw_spacings[i]); // Final spacing values must be integers
+        if (spacings[i] < 2)                                         // Minimum spacing value is 2
+        {
+            spacings[i] = 2;
+        }
     }
 
     // Make sure cell height is even to ensure periodicity
@@ -159,7 +163,7 @@ void SimulationWrapper::perform_single(int total_passes,
 
 Simulation SimulationWrapper::setup() const
 {
-    SimulationCellGrid grid(width, initial_spacings, stagger_grid());
+    CellGrid grid(width, initial_spacings, stagger_grid());
     Simulation simulation(boundary_type, grid, temperature);
     return simulation;
 }

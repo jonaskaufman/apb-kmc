@@ -20,7 +20,7 @@ public:
     Simulation() = delete;
 
     /// Constructs a simulation for given boundary type with initial grid and temperature (in kelvin)
-    Simulation(BOUNDARY_TYPE boundary_type, const SimulationCellGrid& initial_grid, double temperature);
+    Simulation(BOUNDARY_TYPE boundary_type, const CellGrid& initial_grid, double temperature);
 
     /// Attempts one event, updates the time and configuration accordingly
     void step();
@@ -44,7 +44,7 @@ public:
 
 private:
     /// Simulation cell grid to store phase values
-    std::shared_ptr<SimulationCellGrid> grid_ptr;
+    std::shared_ptr<CellGrid> grid_ptr;
 
     /// Rate calculator
     std::shared_ptr<EventRateCalculator> rate_calculator_ptr;

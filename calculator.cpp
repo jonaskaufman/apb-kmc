@@ -8,7 +8,7 @@ inline double boltzmann_factor(double barrier, double temperature) { return std:
 EventRateCalculator::EventRateCalculator(BOUNDARY_TYPE boundary_type,
                                          double temperature,
                                          const std::shared_ptr<const std::vector<Event>>& event_list_ptr,
-                                         const std::shared_ptr<const SimulationCellGrid>& grid_ptr)
+                                         const std::shared_ptr<const CellGrid>& grid_ptr)
     : boundary_minus{boundary_type == BOUNDARY_TYPE::MINUS},
       temperature{temperature},
       event_list_ptr{event_list_ptr},

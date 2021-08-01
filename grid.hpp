@@ -24,7 +24,7 @@ enum class DIRECTION
 /// Coordinate pair
 using Coordinates = std::pair<int, int>;
 
-/// Two-dimensional square grid of pixel values (x is first dimension, y is second dimension)
+/// Two-dimensional grid of pixel values (x is first dimension, y is second dimension)
 using PixelGrid = std::vector<std::vector<double>>;
 
 /// Prints a pixel grid to an output stream
@@ -39,13 +39,13 @@ std::vector<double> average_pixels_horizontally(const PixelGrid& pixel_grid);
  * Grid can either be a square grid (like graph paper), or a staggered grid
  * in which every other row is offset in the x direction by half a cell width (like a brick wall).
  */
-class SimulationCellGrid
+class CellGrid
 {
 public:
-    SimulationCellGrid() = delete;
+    CellGrid() = delete;
 
     /// Constructs a grid with blocks of alternating phase in the y direction
-    SimulationCellGrid(int width, const std::vector<int>& block_heights, bool staggered);
+    CellGrid(int width, const std::vector<int>& block_heights, bool staggered);
 
     /// Grid dimensions
     const int width;
@@ -61,15 +61,16 @@ public:
     /// Returns the coordinates of the given neighbor of the cell at (x, y)
     Coordinates get_neighbor_cell(int x, int y, DIRECTION neighbor_direction) const;
     Coordinates get_neighbor_cell(const Coordinates& origin, DIRECTION neighbor_direction) const;
-    Coordinates get_neighbor_cell(const Coordinates& origin, std::vector<DIRECTION> neighbor_directions) const;
+    Coordinates get_neighbor_cell(const Coordinates& origin, const std::vector<DIRECTION>& neighbor_directions) const;
 
     /// Returns the phase of the given neighbor of the cell at (x, y)
     bool get_neighbor_phase(int x, int y, DIRECTION neighbor_direction) const;
     bool get_neighbor_phase(const Coordinates& origin, DIRECTION neighbor_direction) const;
-    bool get_neighbor_phase(const Coordinates& origin, std::vector<DIRECTION> neighbor_directions) const;
+    bool get_neighbor_phase(const Coordinates& origin, const std::vector<DIRECTION>& neighbor_directions) const;
 
     /// Flips the phase of the cell at (x, y) to the opposite of its current value
     void flip_cell_phase(int x, int y);
+    void flip_cell_phase(const Coordinates& coordinates);
 
     /// Returns a pixel representation of the grid with phases 0 or 1. Width is always doubled.
     PixelGrid get_phase_pixel_grid() const;

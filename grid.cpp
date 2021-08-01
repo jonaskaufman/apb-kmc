@@ -1,6 +1,7 @@
 #include "grid.hpp"
 #include <numeric>
 #include <stdexcept>
+#include <cassert>
 
 void print_pixel_grid(const PixelGrid& pixel_grid, std::ostream& output_stream)
 {
@@ -26,12 +27,12 @@ std::vector<double> average_pixels_horizontally(const PixelGrid& pixel_grid)
         {
             total += pixel_grid[x][y];
         }
-        averages[y] = total / pixel_grid_width;
+        averages[y] = total / (double)pixel_grid_width;
     }
     return averages;
 }
 
-SimulationCellGrid::SimulationCellGrid(int width, const std::vector<int>& block_heights, bool staggered)
+CellGrid::CellGrid(int width, const std::vector<int>& block_heights, bool staggered)
     : width{width}, height{std::accumulate(block_heights.begin(), block_heights.end(), 0)}, staggered{staggered}
 {
     // Checks for periodicity
@@ -64,14 +65,14 @@ SimulationCellGrid::SimulationCellGrid(int width, const std::vector<int>& block_
     }
 }
 
-bool SimulationCellGrid::get_cell_phase(int x, int y) const { return phase_grid[modulo(x, width)][modulo(y, height)]; }
+bool CellGrid::get_cell_phase(int x, int y) const { return phase_grid[modulo(x, width)][modulo(y, height)]; }
 
-bool SimulationCellGrid::get_cell_phase(const Coordinates& coordinates) const
+bool CellGrid::get_cell_phase(const Coordinates& coordinates) const
 {
     return get_cell_phase(coordinates.first, coordinates.second);
 }
 
-Coordinates SimulationCellGrid::get_neighbor_cell(int x, int y, DIRECTION neighbor_direction) const
+Coordinates CellGrid::get_neighbor_cell(int x, int y, DIRECTION neighbor_direction) const
 {
     // Check that direction is valid
     if (staggered && (neighbor_direction == DIRECTION::N || neighbor_direction == DIRECTION::S))
@@ -85,7 +86,7 @@ Coordinates SimulationCellGrid::get_neighbor_cell(int x, int y, DIRECTION neighb
     {
         if (staggered && (neighbor_direction != DIRECTION::E))
         {
-            dx = 1 * ((y + 1) % 2);
+            dx = (y + 1) % 2;
         }
         else
         {
@@ -97,7 +98,7 @@ Coordinates SimulationCellGrid::get_neighbor_cell(int x, int y, DIRECTION neighb
     {
         if (staggered && (neighbor_direction != DIRECTION::W))
         {
-            dx = -1 * (y % 2);
+            dx = -(y % 2);
         }
         else
         {
@@ -117,20 +118,17 @@ Coordinates SimulationCellGrid::get_neighbor_cell(int x, int y, DIRECTION neighb
         dy = -1;
     }
     // Check that coordinates make sense
-    if ((dx == 0 && dy == 0) || dx < -1 || dx > 1 || dy < -1 || dy > 1)
-    {
-        throw std::runtime_error("Neighbor coordinates do not correspond to a neighbor.");
-    }
+    assert(!((dx == 0 && dy == 0) || dx < -1 || dx > 1 || dy < -1 || dy > 1));
     return std::make_pair(modulo(x + dx, width), modulo(y + dy, height));
 }
 
-Coordinates SimulationCellGrid::get_neighbor_cell(const Coordinates& origin, DIRECTION neighbor_direction) const
+Coordinates CellGrid::get_neighbor_cell(const Coordinates& origin, DIRECTION neighbor_direction) const
 {
     return get_neighbor_cell(origin.first, origin.second, neighbor_direction);
 }
 
-Coordinates SimulationCellGrid::get_neighbor_cell(const Coordinates& origin,
-                                                  std::vector<DIRECTION> neighbor_directions) const
+Coordinates CellGrid::get_neighbor_cell(const Coordinates& origin,
+                                        const std::vector<DIRECTION>& neighbor_directions) const
 {
     Coordinates current_cell = origin;
     for (DIRECTION next_direction : neighbor_directions)
@@ -140,34 +138,42 @@ Coordinates SimulationCellGrid::get_neighbor_cell(const Coordinates& origin,
     return current_cell;
 }
 
-bool SimulationCellGrid::get_neighbor_phase(int x, int y, DIRECTION neighbor_direction) const
+bool CellGrid::get_neighbor_phase(int x, int y, DIRECTION neighbor_direction) const
 {
     Coordinates neighbor_cell = get_neighbor_cell(x, y, neighbor_direction);
     return get_cell_phase(neighbor_cell.first, neighbor_cell.second);
 }
 
-bool SimulationCellGrid::get_neighbor_phase(const Coordinates& origin, DIRECTION neighbor_direction) const
+bool CellGrid::get_neighbor_phase(const Coordinates& origin, DIRECTION neighbor_direction) const
 {
     return get_neighbor_phase(origin.first, origin.second, neighbor_direction);
 }
 
-bool SimulationCellGrid::get_neighbor_phase(const Coordinates& origin, std::vector<DIRECTION> neighbor_directions) const
+bool CellGrid::get_neighbor_phase(const Coordinates& origin, const std::vector<DIRECTION>& neighbor_directions) const
 {
     return get_cell_phase(get_neighbor_cell(origin, neighbor_directions));
 }
 
-void SimulationCellGrid::flip_cell_phase(int x, int y)
+void CellGrid::flip_cell_phase(int x, int y)
 {
-    int current_phase = get_cell_phase(x, y);
+    bool current_phase = get_cell_phase(x, y);
     set_cell_phase(x, y, !current_phase);
+    return;
 }
 
-void SimulationCellGrid::set_cell_phase(int x, int y, bool phase)
+void CellGrid::flip_cell_phase(const Coordinates& coordinates)
+{
+    flip_cell_phase(coordinates.first, coordinates.second);
+    return;
+}
+
+void CellGrid::set_cell_phase(int x, int y, bool phase)
 {
     phase_grid[modulo(x, width)][modulo(y, height)] = phase;
+    return;
 }
 
-PixelGrid SimulationCellGrid::get_phase_pixel_grid() const
+PixelGrid CellGrid::get_phase_pixel_grid() const
 {
     // Double width always
     int pixel_grid_width = 2 * width;
@@ -186,10 +192,7 @@ PixelGrid SimulationCellGrid::get_phase_pixel_grid() const
         // Check that all values have been set
         for (int x = 0; x < pixel_grid_width; ++x)
         {
-            if (pixel_grid[x][y] < 0)
-            {
-                throw std::runtime_error("Some pixel grid values were not set properly");
-            }
+            assert(!(pixel_grid[x][y] < 0));
         }
     }
     return pixel_grid;

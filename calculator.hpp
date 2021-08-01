@@ -37,7 +37,7 @@ public:
     EventRateCalculator(BOUNDARY_TYPE boundary_type,
                         double temperature,
                         const std::shared_ptr<const std::vector<Event>>& event_list_ptr,
-                        const std::shared_ptr<const SimulationCellGrid>& grid_ptr);
+                        const std::shared_ptr<const CellGrid>& grid_ptr);
 
     /// Returns the rate of an event given its ID
     double calculate_rate(ID event_id) const;
@@ -47,7 +47,7 @@ private:
     std::shared_ptr<const std::vector<Event>> event_list_ptr;
 
     /// Simulation grid
-    std::shared_ptr<const SimulationCellGrid> grid_ptr;
+    std::shared_ptr<const CellGrid> grid_ptr;
 
     /// Type of boundary being simulated (true for minus, false for plus)
     const bool boundary_minus;

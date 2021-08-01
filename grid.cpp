@@ -1,7 +1,7 @@
 #include "grid.hpp"
+#include <cassert>
 #include <numeric>
 #include <stdexcept>
-#include <cassert>
 
 void print_pixel_grid(const PixelGrid& pixel_grid, std::ostream& output_stream)
 {
@@ -13,6 +13,17 @@ void print_pixel_grid(const PixelGrid& pixel_grid, std::ostream& output_stream)
         }
         output_stream << std::endl;
     }
+    return;
+}
+
+void print_profile(const std::vector<double>& profile, std::ostream& output_stream)
+{
+    for (const auto& a : profile)
+    {
+        output_stream << a << " ";
+    }
+    output_stream << std::endl;
+    return;
 }
 
 std::vector<double> average_pixels_horizontally(const PixelGrid& pixel_grid)

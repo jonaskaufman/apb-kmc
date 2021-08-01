@@ -5,6 +5,7 @@
 #include <cmath>
 #include <fstream>
 #include <numeric>
+#include <stdexcept>
 #include <vector>
 
 std::vector<int> spacings_for_sinusoidal_composition(BOUNDARY_TYPE boundary_type,
@@ -21,8 +22,7 @@ std::vector<int> spacings_for_sinusoidal_composition(BOUNDARY_TYPE boundary_type
     // Make sure boundary spacing will never be too small
     if (spacing_average - spacing_amplitude < 1)
     {
-        std::cerr << "Amplitude too large!" << std::endl;
-        return std::vector<int>();
+        throw std::runtime_error("Amplitude too large!");
     }
 
     // Accounting for the added physical height of boundaries themselves,
@@ -151,14 +151,11 @@ void SimulationWrapper::perform_single(int total_passes,
                 print_pixel_grid(simulation.get_composition_pixel_grid(), composition_grid_file_stream);
             }
             composition_profile_file_stream << simulation.get_time() << std::endl;
-            for (auto& a : simulation.get_average_composition_profile())
-            {
-                composition_profile_file_stream << a << " ";
-            }
-            composition_profile_file_stream << std::endl;
+            print_profile(simulation.get_average_composition_profile(), composition_profile_file_stream);
         }
         simulation.pass();
     }
+    return;
 }
 
 Simulation SimulationWrapper::setup() const

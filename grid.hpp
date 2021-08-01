@@ -30,6 +30,9 @@ using PixelGrid = std::vector<std::vector<double>>;
 /// Prints a pixel grid to an output stream
 void print_pixel_grid(const PixelGrid& pixel_grid, std::ostream& output_stream);
 
+/// Prints a 1D profile to an output stream
+void print_profile(const std::vector<double>& profile, std::ostream& output_stream);
+
 /// Averages each row of a pixel grid and returns the resulting profile
 std::vector<double> average_pixels_horizontally(const PixelGrid& pixel_grid);
 

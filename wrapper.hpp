@@ -24,7 +24,7 @@ void print_initialization_report(BOUNDARY_TYPE boundary_type,
                                  double target_composition,
                                  std::ostream& output_stream);
 
-/// Wrapper to set up and perform single or multiple simulations and process their output
+/// Wrapper to set up and perform simulations and process their output
 class SimulationWrapper
 {
 public:

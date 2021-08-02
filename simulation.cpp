@@ -22,6 +22,12 @@ Simulation::Simulation(BOUNDARY_TYPE boundary_type, const CellGrid& initial_grid
     // Initialize rate calculator
     rate_calculator_ptr = std::make_shared<EventRateCalculator>(boundary_type, temperature, event_list_ptr, grid_ptr);
 
+    // Check that no barriers are negative (no rates > 1) initially
+    for (const ID& id : generate_event_id_list())
+    {
+        assert(rate_calculator_ptr->calculate_rate(id) <= 1);
+    }
+
     // Initialize event selector
     selector_ptr = std::make_unique<lotto::RejectionFreeEventSelector<ID, EventRateCalculator>>(
         rate_calculator_ptr, generate_event_id_list(), generate_impact_table());

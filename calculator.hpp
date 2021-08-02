@@ -70,8 +70,8 @@ private:
     /// Returns true if event passes additional considerations for zeta plus events
     bool passes_additional_checks_zeta_plus(const Event& event) const;
 
-    /// Returns the forward and reverse kinetic barriers for an event
-    std::pair<double, double> calculate_barriers(const Event& event) const;
+    /// Returns the kinetic barrier for an event
+    double calculate_barrier(const Event& event) const;
 
     /// Returns the base barrier height and endpoint energy change for an event
     std::pair<double, double> calculate_base_barrier_and_energy_change_zeta_minus(const Event& event) const;

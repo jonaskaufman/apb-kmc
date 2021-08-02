@@ -21,17 +21,8 @@ double EventRateCalculator::calculate_rate(ID event_id) const
     }
     else
     {
-        auto barriers = calculate_barriers(event);
-        double forward_barrier = barriers.first;
-        double reverse_barrier = barriers.second;
-        if (reverse_barrier < 0.0)
-        {
-            return 0.0;
-        }
-        else
-        {
-            return boltzmann_factor(forward_barrier, temperature);
-        }
+        double barrier = calculate_barrier(event);
+        return boltzmann_factor(barrier, temperature);
     }
 }
 
@@ -161,21 +152,22 @@ bool EventRateCalculator::passes_additional_checks_zeta_plus(const Event& event)
     return true;
 }
 
-std::pair<double, double> EventRateCalculator::calculate_barriers(const Event& event) const
+double EventRateCalculator::calculate_barrier(const Event& event) const
 {
     auto base_barrier_and_energy_change = boundary_minus ? calculate_base_barrier_and_energy_change_zeta_minus(event)
                                                          : calculate_base_barrier_and_energy_change_zeta_plus(event);
     double base_barrier = base_barrier_and_energy_change.first;
     double base_energy_change = base_barrier_and_energy_change.second;
 
-    // Adjust forward and reverse barriers with repulsion energy change
-    double half_repulsion_energy_change = 0.5 * calculate_repulsion_energy_change(event);
-    double forward_barrier = base_barrier + half_repulsion_energy_change;
-    double reverse_barrier = base_barrier - base_energy_change - half_repulsion_energy_change;
+    // Adjust barrier with repulsion energy change
+    double repulsion_energy_change = calculate_repulsion_energy_change(event);
+    double total_energy_change = base_energy_change + repulsion_energy_change;
+    double barrier = (total_energy_change < 0) ? base_barrier : base_barrier + repulsion_energy_change;
 
-    // Forward barrier should never be negative
-    assert(forward_barrier >= 0.0);
-    return std::make_pair(forward_barrier, reverse_barrier);
+    // Forward and reverse barrier should never be negative
+    assert(barrier >= 0.0);
+    assert(barrier - total_energy_change >= 0.0);
+    return barrier;
 }
 
 std::pair<double, double>

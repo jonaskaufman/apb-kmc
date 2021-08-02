@@ -3,29 +3,33 @@
 
 #include "definitions.hpp"
 #include "grid.hpp"
+#include <cmath>
 #include <memory>
 
 /// Boltzmann constant, in eV/K
 #define KB 8.617333262145e-5
 
 /// Defect energies in eV
-#define PLUS_KINK_DEFECT 0.2204
+#define PLUS_KINK_DEFECT 0.22
 
 /// Hop barriers in eV
-#define MINUS_KINK_FORM 0.0297
-#define MINUS_KINK_MOVE 0.0327
-#define PLUS_KINK_FORM_I 0.2766
-#define PLUS_KINK_DESTROY_I 0.0563
-#define PLUS_KINK_FORM_II 0.2342
-#define PLUS_KINK_DESTROY_II 0.0139
-#define PLUS_KINK_MOVE_I 0.0415
-#define PLUS_KINK_MOVE_II 0.0532
-#define PLUS_KINK_MOVE_III 0.0152
-#define PLUS_KINK_MOVE_IV 0.1008
+#define MINUS_KINK_FORM 0.03
+#define MINUS_KINK_MOVE 0.03
+#define PLUS_KINK_FORM_I 0.28
+#define PLUS_KINK_DESTROY_I 0.06
+#define PLUS_KINK_FORM_II 0.23
+#define PLUS_KINK_DESTROY_II 0.01
+#define PLUS_KINK_MOVE_I 0.04
+#define PLUS_KINK_MOVE_II 0.05
+#define PLUS_KINK_MOVE_III 0.02
+#define PLUS_KINK_MOVE_IV 0.10
 
 /// Nearest neighbor boundary repulsion energy in eV / boundary length unit
-#define MINUS_REPULSION 0.0543
-#define PLUS_REPULSION 0.0504
+#define MINUS_REPULSION 0.05
+#define PLUS_REPULSION 0.05
+
+/// Calculates the Boltzmann factor
+inline double boltzmann_factor(double barrier, double temperature) { return std::exp(-barrier / (KB * temperature)); }
 
 /**
  * Calculator of event rates in kinetic Monte Carlo simulation
@@ -66,8 +70,8 @@ private:
     /// Returns true if event passes additional considerations for zeta plus events
     bool passes_additional_checks_zeta_plus(const Event& event) const;
 
-    /// Returns the kinetic barrier for an event
-    double calculate_barrier(const Event& event) const;
+    /// Returns the forward and reverse kinetic barriers for an event
+    std::pair<double, double> calculate_barriers(const Event& event) const;
 
     /// Returns the base barrier height and endpoint energy change for an event
     std::pair<double, double> calculate_base_barrier_and_energy_change_zeta_minus(const Event& event) const;

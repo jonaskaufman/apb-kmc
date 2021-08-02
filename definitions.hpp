@@ -4,8 +4,6 @@
 #include <utility>
 #include <vector>
 
-// TODO: Move other aliases here?
-
 /// Kinetic event represented by indices of grid cells to flip
 using Event = std::vector<std::pair<int, int>>;
 

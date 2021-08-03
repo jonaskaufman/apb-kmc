@@ -35,4 +35,5 @@
 __pycache__
 
 # Other
+apb-kmc
 .ycm_extra_conf.py

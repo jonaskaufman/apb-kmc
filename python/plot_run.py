@@ -69,12 +69,10 @@ def main():
     composition_profile_file = "composition_profile.out"
     times, phase_grids = parse_grid_file(phase_grid_file)
     times, composition_grids = parse_grid_file(composition_grid_file)
-    times, composition_profile_sets = parse_profile_file(composition_profile_file)
+    times, composition_profiles = parse_profile_file(composition_profile_file)
     assert len(times) == len(phase_grids)
     assert len(times) == len(composition_grids)
-    assert len(times) == len(composition_profile_sets)
-    assert len(composition_profile_sets[0]) == 1
-    composition_profiles = [p_set[0] for p_set in composition_profile_sets]
+    assert len(times) == len(composition_profiles)
     height = len(composition_profiles[0])/grid_y_scaling
     print(f'height = {height}')
 

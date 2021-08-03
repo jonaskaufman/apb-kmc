@@ -2,7 +2,8 @@ import numpy as np
 
 grid_x_scaling = 2  # width of one simulation cell, in pixels
 grid_y_scaling = 4  # height of one simulation cell, in pixels
-y_sigma = 15        # standard deviation for profile smoothing, in units of simulation cell height
+
+y_sigma = 15  # std dev for profile smoothing, in units of simulation cell height
 y_sigma_scaled = grid_y_scaling*y_sigma
 
 

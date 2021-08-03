@@ -3,9 +3,12 @@
 
 from grid import *
 from parse import *
+import glob
+import os
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from scipy.optimize import curve_fit
+
 
 def plot_profiles(profiles):
     colors = cm.plasma(np.linspace(0, 1, len(profiles)))
@@ -15,47 +18,77 @@ def plot_profiles(profiles):
         plt.plot(heights, p, color=colors[i])
     plt.show()
 
-def exponential(x, a, k):
-    return a*np.exp(x*k)
+
+def get_fundamental_magnitudes(profiles):
+    """ Extract the fundamental fourier magnitude for each profile, normalized by that of the first profile """
+    fundamental_magnitudes = []
+    for profile in profiles:
+        fourier_transform = np.fft.fft(profile)
+        fundamental = np.abs(fourier_transform[1] + fourier_transform[-1])
+        fundamental_magnitudes.append(fundamental)
+    fundamental_magnitudes = np.array(fundamental_magnitudes)
+    fundamental_magnitudes = fundamental_magnitudes / fundamental_magnitudes[0]
+    return fundamental_magnitudes
+
+
+def exponential_decay(t, a, tau):
+    return a*np.exp(-t/tau)
+
 
 def main():
     # Parse simulation output
-    composition_profile_file = "composition_profile.out"
-    times, composition_profile_sets = parse_profile_file(composition_profile_file)
-    assert len(times) == len(composition_profile_sets)
-
-    # Average and smooth at each time
-    average_composition_profiles = [np.mean(p_set, axis=0) for p_set in composition_profile_sets]
-    smooth_average_composition_profiles = periodic_smooth_profiles(average_composition_profiles, y_sigma_scaled)
-
-    height = len(smooth_average_composition_profiles[0])/grid_y_scaling
+    composition_profile_file = 'composition_profile.out'
+    simulation_directory_prefix = 'sim.*'
+    all_profile_files = glob.glob(os.path.join(
+        simulation_directory_prefix, composition_profile_file))
+    all_times = []
+    all_profiles = []
+    for profile_file in all_profile_files:
+        times, profiles = parse_profile_file(profile_file)
+        assert len(times) == len(profiles)
+        all_times.append(times)
+        all_profiles.append(profiles)
+    for times in all_times:
+        assert len(times) == len(all_times[0])
+    height = len(all_profiles[0][0])/grid_y_scaling
     print(f'height = {height}')
+    all_times = np.array(all_times)
 
-    # Plot profiles over time
-    plot_profiles(smooth_average_composition_profiles)
+    # Fourier transform each set of profiles
+    all_fundamental_magnitudes = []
+    for profiles in all_profiles:
+        all_fundamental_magnitudes.append(get_fundamental_magnitudes(profiles))
+    all_fundamental_magnitudes = np.array(all_fundamental_magnitudes)
 
-    fft_magnitudes = []
-    for profile in smooth_average_composition_profiles:
-        shifted_profile = profile - np.mean(profile)
-        fourier_transform = np.fft.fft(shifted_profile)
-        fft_magnitudes.append(np.abs(fourier_transform))
-    fft_magnitudes = np.array(fft_magnitudes)
-    fft_magnitudes = fft_magnitudes/np.amax(fft_magnitudes) # normalize by maximum
-    #fft_frequencies = np.fft.fftfreq(fft_magnitudes.shape[-1])
-    #fft_frequencies = fft_frequencies*grid_y_scaling 
-    #plt.plot(fft_frequencies, fft_magnitudes[0]) 
-    #plt.show()
+    # Average and fit to exponential decay
+    avg_times = np.average(all_times, axis=0)[1:]
+    std_times = np.std(all_times, axis=0)[1:]
+    avg_fundamental_magnitudes = np.average(
+        all_fundamental_magnitudes, axis=0)[1:]
+    std_fundamental_magnitudes = np.std(all_fundamental_magnitudes, axis=0)[1:]
+    print(f'max std dev of times: {np.max(std_times)}')
+    print(f'max std dev of magnitudes: {np.max(std_fundamental_magnitudes)}')
 
-    fundamental_magntitude = np.amax(fft_magnitudes, axis=1)
-    popt, pcov = curve_fit(exponential, times, fundamental_magntitude, p0=[1.0, 0.0])
-    tau = -1/popt[1]
-    D = (height**2)/(4*(np.pi**2)*tau) 
-    print(f'tau = {tau}')
-    print(f'D = {D}')
-    fit_values = [exponential(t, *popt) for t in times]
-    plt.plot(times, fit_values, 'k-')
-    plt.plot(times, fundamental_magntitude, 'o')
-    plt.yscale('log')
+    popt, pcov = curve_fit(exponential_decay, avg_times,
+                           avg_fundamental_magnitudes, p0=[1.0, 1000], sigma=std_fundamental_magnitudes)
+    perr = np.sqrt(np.diag(pcov))
+    print(f'tau = {popt[1]} +/- {perr[1]}')
+    #tau = popt[1]
+    #D = (height**2)/(4*(np.pi**2)*tau)
+    #print(f'D = {D}')
+    fit_fundamental_magnitudes = [
+        exponential_decay(t, *popt) for t in avg_times]
+
+    alph = 0.25
+    for i in range(len(all_times)):
+        plt.plot(all_times[i], all_fundamental_magnitudes[i],
+                 'tab:orange', alpha=alph, zorder=1)
+    plt.errorbar(avg_times, avg_fundamental_magnitudes, xerr=std_times,
+                 yerr=std_fundamental_magnitudes, color='tab:gray', zorder=2)
+    plt.plot(avg_times, fit_fundamental_magnitudes, 'tab:blue', zorder=3)
+    plt.xlabel('time')
+    plt.ylabel('fundamental Fourier magnitude')
+#    plt.yscale('log')
     plt.show()
 
 

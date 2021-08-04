@@ -1,0 +1,13 @@
+{
+    "boundary_type" : "-",
+    "target_grid_dimensions" : [20, 200],
+    "initialization" : {
+        "mode" : "sinusoidal",
+        "composition_average" : 0.45454545,
+        "composition_amplitude" : 0.02
+    },
+    "temperature" : 300, 
+    "total_passes" : 1000,
+    "print_interval" : 10,
+    "full_output" : true
+}

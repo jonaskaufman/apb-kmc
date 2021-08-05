@@ -14,6 +14,9 @@ std::vector<int> spacings_for_sinusoidal_composition(BOUNDARY_TYPE boundary_type
 /// Average boundary spacing for a given boundary type and composition
 double average_spacing_from_composition(BOUNDARY_TYPE boundary_type, double composition);
 
+/// Average composition for a given boundary type and boundary spacing
+double average_composition_from_spacing(BOUNDARY_TYPE boundary_type, double spacing);
+
 /// Height accounting for height of boundaries themselves, given a set of boundary spacings
 double physical_height(BOUNDARY_TYPE boundary_type, const std::vector<int>& boundary_cell_spacings);
 

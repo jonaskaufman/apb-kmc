@@ -91,6 +91,18 @@ double average_spacing_from_composition(BOUNDARY_TYPE boundary_type, double comp
     }
 }
 
+double average_composition_from_spacing(BOUNDARY_TYPE boundary_type, double spacing)
+{
+    if (boundary_type == BOUNDARY_TYPE::MINUS)
+    {
+        return (spacing / (2 * spacing + 1));
+    }
+    else
+    {
+        return (spacing / (2 * spacing - 0.5));
+    }
+}
+
 double physical_height(BOUNDARY_TYPE boundary_type, const std::vector<int>& boundary_cell_spacings)
 {
     double cell_height = std::accumulate(boundary_cell_spacings.begin(), boundary_cell_spacings.end(), 0);
@@ -118,8 +130,10 @@ void print_initialization_report(BOUNDARY_TYPE boundary_type,
     int n_boundaries = initial_spacings.size();
     double spacing_average = (double)cell_height / (double)n_boundaries;
     double target_spacing_average = average_spacing_from_composition(boundary_type, target_composition);
+    double composition = average_composition_from_spacing(boundary_type, spacing_average);
     output_stream << "Average cell spacing: " << spacing_average << " (Target: " << target_spacing_average << ")"
                   << std::endl;
+    output_stream << "Average composition: " << composition << " (Target: " << target_composition << ")" << std::endl;
     return;
 }
 

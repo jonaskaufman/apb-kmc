@@ -153,8 +153,12 @@ void SimulationWrapper::perform_single(int total_passes,
                                        std::ofstream& composition_profile_file_stream)
 {
     Simulation simulation = setup();
-    for (int n = 0; n < total_passes; ++n)
+    for (int n = 0; n <= total_passes; ++n)
     {
+        if (n > 0)
+        {
+            simulation.pass();
+        }
         if (n % print_interval == 0)
         {
             if (full_output)
@@ -167,7 +171,6 @@ void SimulationWrapper::perform_single(int total_passes,
             composition_profile_file_stream << simulation.get_time() << std::endl;
             print_profile(simulation.get_average_composition_profile(), composition_profile_file_stream);
         }
-        simulation.pass();
     }
     return;
 }

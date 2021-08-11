@@ -10,7 +10,7 @@ import matplotlib.cm as cm
 from scipy.interpolate import interp1d
 from scipy.optimize import curve_fit
 
-
+"""
 def plot_profiles(profiles):
     colors = cm.plasma(np.linspace(0, 1, len(profiles)))
     max_height = len(profiles[0])/grid_y_scaling
@@ -18,18 +18,18 @@ def plot_profiles(profiles):
     for i, p in enumerate(profiles):
         plt.plot(heights, p, color=colors[i])
     plt.show()
+"""
 
 
-def get_fundamental_magnitudes(profiles):
-    """ Extract the fundamental fourier magnitude for each profile, normalized by that of the first profile """
-    fundamental_magnitudes = []
+def get_real_fundamental_amplitudes(profiles):
+    """ Extract the real part of the fundamental amplitude for each profile, corresponding to the cosine component """
+    amplitudes = []
     for profile in profiles:
-        fourier_transform = np.fft.fft(profile)
-        fundamental = np.abs(fourier_transform[1] + fourier_transform[-1])
-        fundamental_magnitudes.append(fundamental)
-    fundamental_magnitudes = np.array(fundamental_magnitudes)
-    fundamental_magnitudes = fundamental_magnitudes / fundamental_magnitudes[0]
-    return fundamental_magnitudes
+        real_fourier_transform = np.fft.rfft(profile)
+        fundamental = np.real(real_fourier_transform[1])/len(profile)
+        amplitudes.append(fundamental)
+    amplitudes = np.array(amplitudes)
+    return amplitudes
 
 
 def get_interpolated_samples(y, x, x_sample):
@@ -50,6 +50,7 @@ def main():
     simulation_directory_prefix = 'sim.*'
     all_profile_files = glob.glob(os.path.join(
         simulation_directory_prefix, composition_profile_file))
+    print(f'{len(all_profile_files)} simulations found')
     all_times = []
     all_profiles = []
     for profile_file in all_profile_files:
@@ -64,67 +65,71 @@ def main():
     all_times = np.array(all_times)
 
     # Fourier transform each set of profiles
-    all_fundamental_magnitudes = []
+    all_amplitudes = []
     for profiles in all_profiles:
-        all_fundamental_magnitudes.append(get_fundamental_magnitudes(profiles))
-    all_fundamental_magnitudes = np.array(all_fundamental_magnitudes)
+        all_amplitudes.append(get_real_fundamental_amplitudes(profiles))
+    all_amplitudes = np.array(all_amplitudes)
 
     # Interpolate and average
     min_sample_time = max(all_times[:, 0])
     max_sample_time = min(all_times[:, -1])
     n_samples = len(all_times[0])
     sample_times = np.linspace(min_sample_time, max_sample_time, n_samples)[1:]
-    all_interp_fundamental_magnitudes = [get_interpolated_samples(
-        all_fundamental_magnitudes[i], all_times[i], sample_times) for i in range(len(all_times))]
-    avg_fundamental_magnitudes = np.average(
-        all_interp_fundamental_magnitudes, axis=0)
-    std_fundamental_magnitudes = np.std(
-        all_interp_fundamental_magnitudes, axis=0)
+    all_interp_amplitudes = [get_interpolated_samples(
+        all_amplitudes[i], all_times[i], sample_times) for i in range(len(all_times))]
+    avg_amplitudes = np.average(
+        all_interp_amplitudes, axis=0)
+    std_amplitudes = np.std(
+        all_interp_amplitudes, axis=0)
+    initial_amplitude = avg_amplitudes[0]
 
-    cutoff_time_index = len(sample_times) - 1
-    for i, t in enumerate(sample_times):
-        if (avg_fundamental_magnitudes[i] < 2*std_fundamental_magnitudes[i]):
-            print(
-                f'Average magnitude is below two standard deviations at time {t}')
-            cutoff_time_index = i
-            break
+    # Flip amplitudes if initial is negative
+    if initial_amplitude < 0:
+        all_amplitudes = [-a for a in all_amplitudes]
+        avg_amplitudes = -avg_amplitudes
+        initial_amplitude = -initial_amplitude
+    print(f'initial amplitude: {initial_amplitude}')
 
-    # Fit to exponential decay
-    inv_tau_guess = 1
-    for i, t in enumerate(sample_times):
-        if (avg_fundamental_magnitudes[i] < 1/np.e):
-            inv_tau_guess = 1 / t
-            break
-    popt, pcov = curve_fit(exponential_decay, sample_times[:cutoff_time_index],
-                           avg_fundamental_magnitudes[:cutoff_time_index], p0=[1.0, inv_tau_guess], sigma=std_fundamental_magnitudes[:cutoff_time_index], absolute_sigma=True)
-    perr = np.sqrt(np.diag(pcov))
-    print(f'prefactor = {popt[0]} +/- {perr[0]}')
-    print(f'1/tau = {popt[1]} +/- {perr[1]}')
-    print(f'tau = {1/popt[1]} +/- {perr[1]/popt[1]/popt[1]} ')
+    fit = True
+    if fit:
+        cut_index = len(sample_times)
+        print(f'samples in fit: {cut_index}')
+
+        # Fit to exponential decay
+        inv_tau_guess = 0
+        for i, t in enumerate(sample_times):
+            if (avg_amplitudes[i] < 1/np.e):
+                inv_tau_guess = 1 / t
+                break
+        guess = [initial_amplitude, inv_tau_guess]
+        popt, pcov = curve_fit(exponential_decay, sample_times[:cut_index], avg_amplitudes[:cut_index], p0=guess, bounds=(
+            0, np.inf), sigma=std_amplitudes[:cut_index], absolute_sigma=True)
+        perr = np.sqrt(np.diag(pcov))
+        print(f'prefactor = {popt[0]} +/- {perr[0]}')
+        print(f'1/tau = {popt[1]} +/- {perr[1]}')
+        print(f'tau = {1/popt[1]} +/- {perr[1]/popt[1]/popt[1]} ')
+        fit_amplitudes = exponential_decay(
+            sample_times[:cut_index], *popt)
 
     # Plot results
     fig, ax = plt.subplots(2, 1, sharex=True, figsize=(4, 6))
 
-    fit_fundamental_magnitudes = [
-        exponential_decay(t, *popt) for t in sample_times[:cutoff_time_index]]
     alph = 0.25
     for i in range(len(all_times)):
         for a in ax:
-            a.plot(all_times[i], all_fundamental_magnitudes[i],
+            a.plot(all_times[i], all_amplitudes[i],
                    'tab:orange', alpha=alph, zorder=1)
     for a in ax:
-        a.axvline(sample_times[cutoff_time_index], color='k', zorder=2)
-        a.errorbar(sample_times, avg_fundamental_magnitudes,
-                   yerr=std_fundamental_magnitudes, color='tab:gray', zorder=3)
-        a.plot(sample_times[:cutoff_time_index],
-               fit_fundamental_magnitudes, 'tab:blue', zorder=4)
+        a.errorbar(sample_times, avg_amplitudes,
+                   yerr=std_amplitudes, color='tab:gray', zorder=3)
+        if fit:
+            a.plot(sample_times[:cut_index], fit_amplitudes,
+                   'tab:blue', linestyle='-', zorder=4)
 
     plt.xlabel('time')
     for a in ax:
-        a.set_ylabel('fundamental Fourier magnitude')
-    ax[0].set_ylim([0, 1])
+        a.set_ylabel('amplitude')
     ax[1].set_yscale('log')
-    ax[1].set_ylim([1e-3, 1.5])
     plt.tight_layout()
     plt.show()
 

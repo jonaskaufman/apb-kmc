@@ -1,3 +1,6 @@
 [submodule "submodules/nlohmann-json"]
 	path = submodules/nlohmann-json
 	url = https://github.com/nlohmann/json
+[submodule "submodules/kmc-lotto"]
+	path = submodules/kmc-lotto
+	url = https://github.com/jonaskaufman/kmc-lotto.git

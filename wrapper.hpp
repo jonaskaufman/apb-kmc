@@ -4,7 +4,7 @@
 #include "simulation.hpp"
 #include <vector>
 
-/// Calculate initial boundary spacings that will produce a roughly sinusoidal composition profile with close to the
+/// Calculates initial boundary spacings that will produce a roughly sinusoidal composition profile with close to the
 // desired average, amplitude, and height (wavelength)
 std::vector<int> spacings_for_sinusoidal_composition(BOUNDARY_TYPE boundary_type,
                                                      double composition_average,
@@ -20,29 +20,31 @@ double average_composition_from_spacing(BOUNDARY_TYPE boundary_type, double spac
 /// Height accounting for height of boundaries themselves, given a set of boundary spacings
 double physical_height(BOUNDARY_TYPE boundary_type, const std::vector<int>& boundary_cell_spacings);
 
-/// Print a report summarizing the initial spacings
+/// Prints a report summarizing the initial spacings
 void print_initialization_report(BOUNDARY_TYPE boundary_type,
                                  const std::vector<int>& initial_spacings,
                                  double target_physical_height,
                                  double target_composition,
                                  std::ostream& output_stream);
 
-/// Wrapper to set up and perform simulations and process their output
+/**
+ * Wrapper to set up and perform simulations and process their output
+ */
 class SimulationWrapper
 {
 public:
     SimulationWrapper() = delete;
 
-    /// Construct a wrapper with given simulation conditions
+    /// Constructs a wrapper with given simulation conditions
     SimulationWrapper(BOUNDARY_TYPE boundary_type,
                       int width,
                       const std::vector<int>& initial_spacings,
                       double temperature);
 
-    /// Perform a single simulation for a given number of passes
+    /// Performs a single simulation for a given number of passes.
     //  The phase grid, composition grid, and composition profile are printed out
-    //  (with a time stamp) every print_interval passes, to their respective file streams
-    //  If full_output is false, only composition profile is written
+    //  (with a time stamp) every print_interval passes, to their respective file streams.
+    //  If full_output is false, only composition profile is written.
     void perform_single(int total_passes,
                         int print_interval,
                         bool full_output,
@@ -63,10 +65,10 @@ private:
     /// Temperature for simulations
     const double temperature;
 
-    /// Set up a single simulation
+    /// Sets up a single simulation
     Simulation setup() const;
 
-    /// Determine whether grid should be staggered based on boundary_type
+    /// Determines whether grid should be staggered based on boundary_type
     bool stagger_grid() const;
 };
 

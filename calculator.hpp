@@ -38,6 +38,8 @@ class EventRateCalculator
 {
 public:
     EventRateCalculator() = delete;
+
+    /// Constructs a rate calculator for the given inputs
     EventRateCalculator(BOUNDARY_TYPE boundary_type,
                         double temperature,
                         const std::shared_ptr<const std::vector<Event>>& event_list_ptr,

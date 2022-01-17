@@ -39,7 +39,7 @@ public:
     //  Cell width and height are scaled by factors of 2 and 4, respectively.
     PixelGrid get_composition_pixel_grid() const;
 
-    /// Returns average composition profile obtained by averaging each row of the composition pixel grid.
+    /// Returns average composition profile obtained by averaging each row of the composition pixel grid
     std::vector<double> get_average_composition_profile() const;
 
 private:
@@ -67,19 +67,19 @@ private:
     /// Returns the rate of an event given the current configuration
     double calculate_rate(const Event& event) const;
 
-    /// Generate event list
+    /// Generates event list
     std::vector<Event> generate_event_list() const;
 
-    // Generate event ID list
+    /// Generates event ID list
     std::vector<ID> generate_event_id_list() const;
 
-    // Generate map from cell coordinates to IDs of events involving that cell
+    /// Generates map from cell coordinates to IDs of events involving that cell
     std::map<Coordinates, std::vector<ID>> generate_coordinates_ids_map() const;
 
-    // Generate the list of cell coordinates that impact the rate of a given event
+    /// Generates the list of cell coordinates that impact the rate of a given event
     std::set<Coordinates> generate_impact_neighborhood(const Event& impacted_event) const;
 
-    // Generate impact table
+    /// Generates impact table
     std::map<ID, std::vector<ID>> generate_impact_table() const;
 };
 

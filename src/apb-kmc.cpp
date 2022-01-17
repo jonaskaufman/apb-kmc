@@ -1,9 +1,9 @@
-#include "submodules/nlohmann-json/include/nlohmann/json.hpp"
 #include "wrapper.hpp"
 #include <ctime>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include <numeric>
 #include <stdexcept>
 #include <string>

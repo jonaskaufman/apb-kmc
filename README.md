@@ -4,10 +4,12 @@
 ## Background
 This program simulates the macroscopic behavior resulting from a particular [cation diffusion mechanism](https://doi.org/10.1103/PhysRevMaterials.5.055401) identified in the layered material P3-Na<sub>*x*</sub>CoO<sub>2</sub>. In this mechanism, Na diffusion through the 2-D intercalation layers is facilitated by the motion of APBs. Two specific types of APBs, named zeta minus/plus, are supported.
 
-Further details and results will be linked here upon their publication.
+For further details of the simulations and results, see [our publication](https://pubs.acs.org/doi/abs/10.1021/acs.chemmater.1c04152).
 
 ## Compilation
 Be sure to clone the repository using `--recurse-submodules`.
+
+This program relies on the [kmc-lotto](https://github.com/jonaskaufman/kmc-lotto) library, which is included as a submodule. Its repository contains [tests](https://github.com/jonaskaufman/kmc-lotto#installation) that you may wish to run.
 
 Compile `apb-kmc` using the provided `Makefile` by running `make`. If you want to use a compiler other than `g++-9` you must edit the `Makefile`. The compiler must have C++17 support.
 
